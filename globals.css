@@ -1,0 +1,179 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --font-size: 16px;
+  /* SwappFit Light Mode Palette */
+  --background: #F7F5F2;
+  --foreground: #1E1030;
+  --card: #FFFFFF;
+  --card-foreground: #1E1030;
+  --popover: #FFFFFF;
+  --popover-foreground: #1E1030;
+  --primary: #BC2F54;
+  --primary-foreground: #FFFFFF;
+  /* Brand gradient: deep wine -> bright raspberry (matches reference photo) */
+  --g-start: #4E1126;
+  --g-end: #C53F64;
+  --secondary: #ECE8E2;
+  --secondary-foreground: #1E1030;
+  --muted: #EDE9E3;
+  --muted-foreground: #8C8579;
+  --accent: #ECE8E2;
+  --accent-foreground: #1E1030;
+  --destructive: #d4183d;
+  --destructive-foreground: #ffffff;
+  --border: #E5E0D8;
+  --input: transparent;
+  --input-background: #EDE9E3;
+  --switch-background: #E5E0D8;
+  --font-weight-medium: 500;
+  --font-weight-normal: 400;
+  --ring: #BC2F54;
+  --radius: 1rem;
+  /* Legacy compat mappings for custom CSS */
+  --color-primary: var(--primary);
+  --color-text-primary: var(--foreground);
+  --color-text-secondary: var(--muted-foreground);
+  --color-text-tertiary: var(--muted-foreground);
+  --color-bg-primary: var(--background);
+  --color-bg-secondary: var(--card);
+  --color-border: var(--border);
+  --color-error: var(--destructive);
+  --color-success: #10B981;
+  --color-warning: #F59E0B;
+  --radius-full: 9999px;
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+}
+
+.dark {
+  /* SwappFit Dark Mode Palette */
+  --background: #0B1120;
+  --foreground: #F8FAFC;
+  --card: #111827;
+  --card-foreground: #F8FAFC;
+  --popover: #111827;
+  --popover-foreground: #F8FAFC;
+  --primary: #D14872;
+  --primary-foreground: #FFFFFF;
+  /* Brand gradient: deep wine -> bright raspberry (matches reference photo) */
+  --g-start: #5A1530;
+  --g-end: #D14872;
+  --secondary: #1F2937;
+  --secondary-foreground: #F8FAFC;
+  --muted: #1F2937;
+  --muted-foreground: #7A5C6A;
+  --accent: #2E1525;
+  --accent-foreground: #F5E6EA;
+  --destructive: #9B2247;
+  --destructive-foreground: #F5E6EA;
+  --border: #2E1525;
+  --input: #2E1525;
+  --ring: #D14872;
+  --font-weight-medium: 500;
+  --font-weight-normal: 400;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-input-background: var(--input-background);
+  --color-switch-background: var(--switch-background);
+  --color-ring: var(--ring);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --font-sans: var(--font-geist-sans), 'Inter', system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), 'Geist Mono Fallback';
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    font-size: var(--font-size);
+  }
+  h1 { font-weight: var(--font-weight-medium); line-height: 1.5; }
+  h2 { font-weight: var(--font-weight-medium); line-height: 1.5; }
+  h3 { font-weight: var(--font-weight-medium); line-height: 1.5; }
+  h4 { font-weight: var(--font-weight-medium); line-height: 1.5; }
+  label { font-weight: var(--font-weight-medium); line-height: 1.5; }
+  button { font-weight: var(--font-weight-medium); line-height: 1.5; }
+  input { font-weight: var(--font-weight-normal); line-height: 1.5; }
+}
+
+/* Base */
+html {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  scroll-behavior: smooth;
+}
+
+body {
+  min-height: 100dvh;
+  overflow-x: hidden;
+  text-rendering: optimizeLegibility;
+}
+
+/* RTL Support */
+[dir="rtl"] .rtl-flip {
+  transform: scaleX(-1);
+}
+[dir="rtl"] .no-rtl-flip {
+  transform: none; /* Usually not needed unless overridden by something else, but good to be explicit */
+}
+
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.4s ease-out forwards;
+}
+
+.stagger-1 { animation-delay: 0.05s; }
+.stagger-2 { animation-delay: 0.1s; }
+.stagger-3 { animation-delay: 0.15s; }
+.stagger-4 { animation-delay: 0.2s; }
+
+/* Brand gradient — deep wine to bright raspberry, matching the reference */
+.bg-brand-gradient {
+  background-image: linear-gradient(160deg, var(--g-start), var(--g-end));
+}
+.shadow-brand {
+  box-shadow: 0 12px 24px color-mix(in srgb, var(--g-end) 32%, transparent);
+}
