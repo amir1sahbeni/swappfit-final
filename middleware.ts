@@ -1,3 +1,9 @@
-export function middleware() {}
+import { NextResponse } from "next/server";
 
-export const config = {};
+export function middleware() {
+  return NextResponse.next();
+}
+
+export const config = {
+  matcher: [],
+};
