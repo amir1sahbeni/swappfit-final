@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Camera, Plus, Check, Loader2, X } from "lucide-react"
 import { PageHeader } from "@/components/page-header"
@@ -11,11 +11,13 @@ import { useAppContext } from "@/components/app-context"
 import { AlertCircle, PlayCircle } from "lucide-react"
 import { useTranslations } from 'next-intl'
 
+const MAX_PHOTOS = 5
 const conditions = ["New", "Like New", "Excellent", "Good", "Fair"]
 const formCategories = categories.filter((c) => c !== "All")
 
 export default function CreateListingPage() {
   const t = useTranslations('Create')
+  const tAuth = useTranslations('Auth')
   const router = useRouter()
   const [name, setName] = useState("")
   const [brand, setBrand] = useState("")
@@ -29,25 +31,49 @@ export default function CreateListingPage() {
   const [previewUrls, setPreviewUrls] = useState<string[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState("")
-  
+  const [photoError, setPhotoError] = useState("")
+
   const { incrementListingsCreated } = useAppContext()
   
   const fileInputRef = useRef<HTMLInputElement>(null)
   const supabase = createClient()
 
+  // Server-side backup: redirect unauthenticated users
+  useEffect(() => {
+    async function checkAuth() {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        router.replace('/auth?redirect=/create')
+      }
+    }
+    checkAuth()
+  }, [])
+
+  const atPhotoLimit = files.length >= MAX_PHOTOS
   const canSubmit = name.trim() && price.trim() && files.length > 0 && !isSubmitting
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPhotoError("")
     if (e.target.files && e.target.files.length > 0) {
-      const newFiles = Array.from(e.target.files)
-      setFiles(prev => [...prev, ...newFiles])
+      const newFile = e.target.files[0]
       
-      const newUrls = newFiles.map(file => URL.createObjectURL(file))
-      setPreviewUrls(prev => [...prev, ...newUrls])
+      if (files.length >= MAX_PHOTOS) {
+        setPhotoError(t('photoLimitError'))
+        // Reset input so user can try again after removing a photo
+        if (fileInputRef.current) fileInputRef.current.value = ""
+        return
+      }
+      
+      setFiles(prev => [...prev, newFile])
+      const newUrl = URL.createObjectURL(newFile)
+      setPreviewUrls(prev => [...prev, newUrl])
     }
+    // Always reset the input value so the same file can be re-selected after removal
+    if (fileInputRef.current) fileInputRef.current.value = ""
   }
 
   const removeFile = (index: number) => {
+    setPhotoError("")
     setFiles(prev => prev.filter((_, i) => i !== index))
     setPreviewUrls(prev => {
       const urls = [...prev]
@@ -126,35 +152,51 @@ export default function CreateListingPage() {
 
       {/* Photos */}
       <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">{t('photos')}</p>
+      
+      {/* Photo counter */}
+      <p className={`mt-1 text-[11px] font-medium ${atPhotoLimit ? 'text-primary' : 'text-muted-foreground'}`}>
+        {atPhotoLimit ? t('photoLimitReached') : t('photoCounter', { count: files.length })}
+      </p>
+
       <div className="mt-3 flex gap-3 overflow-x-auto hide-scrollbar pb-2">
         {previewUrls.map((url, i) => (
           <div key={url} className="relative shrink-0">
             <img src={url} alt="Preview" className="aspect-square w-24 rounded-2xl object-cover border border-border" />
             <button
               onClick={() => removeFile(i)}
-              className="absolute -top-2 -right-2 flex h-6 w-6 items-center justify-center rounded-full bg-destructive text-destructive-foreground"
+              aria-label={t('removePhoto')}
+              className="absolute -top-2 -right-2 flex h-6 w-6 items-center justify-center rounded-full bg-destructive text-destructive-foreground transition-transform active:scale-90"
             >
               <X className="h-3 w-3" />
             </button>
           </div>
         ))}
 
-        <button
-          onClick={() => fileInputRef.current?.click()}
-          className="shrink-0 flex aspect-square w-24 flex-col items-center justify-center gap-1 rounded-2xl bg-muted text-muted-foreground transition-transform active:scale-95"
-        >
-          <Camera className="h-6 w-6" />
-          <span className="text-[11px] font-medium">{t('add')}</span>
-        </button>
+        {/* Add photo button — hidden when at limit */}
+        {!atPhotoLimit && (
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            className="shrink-0 flex aspect-square w-24 flex-col items-center justify-center gap-1 rounded-2xl bg-muted text-muted-foreground transition-transform active:scale-95"
+          >
+            <Camera className="h-6 w-6" />
+            <span className="text-[11px] font-medium">{t('add')}</span>
+          </button>
+        )}
+
         <input
           type="file"
           ref={fileInputRef}
           className="hidden"
           accept="image/*"
-          multiple
+          multiple={false}
           onChange={handleFileChange}
         />
       </div>
+
+      {/* Photo error */}
+      {photoError && (
+        <p className="mt-1.5 text-xs text-destructive">{photoError}</p>
+      )}
 
       {/* Fields */}
       <div className="mt-6 flex flex-col gap-5">

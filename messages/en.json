@@ -93,7 +93,11 @@
     "title": "New Listing",
     "subtitle": "Add an item to swap",
     "photos": "Photos",
-    "add": "Add",
+    "add": "Add Photo",
+    "photoCounter": "{count}/5 photos added",
+    "photoLimitReached": "Maximum 5 photos reached",
+    "photoLimitError": "You can only upload up to 5 photos per listing",
+    "removePhoto": "Remove photo",
     "itemName": "Item name",
     "brand": "Brand",
     "size": "Size",
@@ -144,7 +148,8 @@
     "checkEmailConfirm": "Please check your email to confirm your account.",
     "enterEmailFirst": "Please enter your email first",
     "passwordResetSent": "Password reset email sent. Please check your inbox.",
-    "swapPremiumFashion": "Swap premium fashion with people near you."
+    "swapPremiumFashion": "Swap premium fashion with people near you.",
+    "signInToCreate": "Sign in to create a listing"
   },
   "Search": {
     "title": "Search",

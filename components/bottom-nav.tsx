@@ -2,17 +2,20 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { Home, Bell, Plus, MessageCircle, User } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useTranslations } from "next-intl"
 
 export function BottomNav() {
   const pathname = usePathname()
+  const router = useRouter()
   const t = useTranslations('Nav')
+  const tAuth = useTranslations('Auth')
   const [unreadCount, setUnreadCount] = useState(0)
   const [unreadMessageCount, setUnreadMessageCount] = useState(0)
   const [unreadSwapCount, setUnreadSwapCount] = useState(0)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
 
   useEffect(() => {
     const supabase = createClient()
@@ -23,6 +26,8 @@ export function BottomNav() {
     async function init() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
+
+      setIsAuthenticated(true)
 
       // Track unread notifications
       const { count } = await supabase
@@ -146,6 +151,16 @@ export function BottomNav() {
     }
   }, [])
 
+  const handleCreateClick = async (e: React.MouseEvent) => {
+    if (!isAuthenticated) {
+      e.preventDefault()
+      // Show a brief toast-style message, then redirect
+      const toastMsg = tAuth('signInToCreate')
+      // Use a native-style alert-free approach: redirect directly with message
+      router.push(`/auth?redirect=/create&message=${encodeURIComponent(toastMsg)}`)
+    }
+  }
+
   const tabs = [
     { key: 'home', label: t('home'), icon: Home, href: "/" },
     { key: 'notifications', label: t('notifications'), icon: Bell, href: "/notifications" },
@@ -166,6 +181,7 @@ export function BottomNav() {
                 key={key}
                 href={href}
                 aria-label={label}
+                onClick={handleCreateClick}
                 className="-mt-1 flex h-[52px] w-[60px] items-center justify-center rounded-full bg-brand-gradient shadow-[0_12px_24px_rgba(192,57,91,0.32)] transition-transform active:scale-90"
               >
                 <Icon className="h-6 w-6 text-primary-foreground" />

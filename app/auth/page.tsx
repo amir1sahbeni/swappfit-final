@@ -1,8 +1,8 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Image from "next/image"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Mail, Lock, User, ArrowRight, Loader2, MapPin } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useTranslations } from 'next-intl'
@@ -17,6 +17,7 @@ const TUNISIAN_GOVERNORATES = [
 export default function AuthPage() {
   const t = useTranslations('Auth')
   const router = useRouter()
+  const searchParams = useSearchParams()
   const supabase = createClient()
   const [mode, setMode] = useState<"login" | "signup">("login")
   const [email, setEmail] = useState("")
@@ -27,7 +28,17 @@ export default function AuthPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
 
+  const redirectTo = searchParams.get('redirect') || '/'
+  const infoMessage = searchParams.get('message') || ''
+
   const isLogin = mode === "login"
+
+  // Show info message from redirect (e.g. "Sign in to create a listing")
+  useEffect(() => {
+    if (infoMessage) {
+      setError(infoMessage)
+    }
+  }, [infoMessage])
 
   async function submit(e: React.FormEvent) {
     e.preventDefault()
@@ -52,8 +63,12 @@ export default function AuthPage() {
           password,
         })
         if (error) throw error
-        router.replace("/")
+        // Redirect back to original destination after successful login
+        router.replace(redirectTo)
       } else {
+        const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
+        const emailRedirectTo = `${siteUrl}${redirectTo !== '/' ? redirectTo : ''}`
+
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
@@ -63,6 +78,7 @@ export default function AuthPage() {
               governorate,
               city,
             },
+            emailRedirectTo,
           },
         })
         if (error) throw error
@@ -72,7 +88,8 @@ export default function AuthPage() {
           return
         }
 
-        router.replace("/")
+        // Redirect to the intended destination after signup
+        router.replace(redirectTo)
       }
     } catch (err: any) {
       setError(err.message)
@@ -86,7 +103,10 @@ export default function AuthPage() {
       setError(t('enterEmailFirst'))
       return
     }
-    const { error } = await supabase.auth.resetPasswordForEmail(email)
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${siteUrl}/auth/callback`,
+    })
     if (error) {
       setError(error.message)
     } else {

@@ -93,7 +93,11 @@
     "title": "Nouvelle annonce",
     "subtitle": "Ajoute un article à échanger",
     "photos": "Photos",
-    "add": "Ajouter",
+    "add": "Ajouter une photo",
+    "photoCounter": "{count}/5 photos ajoutées",
+    "photoLimitReached": "Maximum 5 photos atteint",
+    "photoLimitError": "Tu ne peux ajouter que 5 photos par annonce",
+    "removePhoto": "Supprimer la photo",
     "itemName": "Nom de l'article",
     "brand": "Marque",
     "size": "Taille",
@@ -144,7 +148,8 @@
     "checkEmailConfirm": "Vérifie ton email pour confirmer ton compte.",
     "enterEmailFirst": "Entre ton email d'abord",
     "passwordResetSent": "Email de réinitialisation envoyé. Vérifie ta boîte de réception.",
-    "swapPremiumFashion": "Échange de mode premium avec des gens près de chez toi."
+    "swapPremiumFashion": "Échange de mode premium avec des gens près de chez toi.",
+    "signInToCreate": "Connecte-toi pour créer une annonce"
   },
   "Search": {
     "title": "Recherche",
