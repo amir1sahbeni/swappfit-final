@@ -14,7 +14,7 @@ export default async function SwapsPage() {
   const t = await getTranslations('Swaps')
   const supabase = await createServerClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/auth')
+  if (!user) redirect('/auth?redirect=/swaps')
 
   const proposals = await getUserProposals(user.id)
   const purchases = await getUserPurchases(user.id)

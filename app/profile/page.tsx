@@ -18,7 +18,8 @@ export default async function ProfilePage() {
   const t = await getTranslations('Profile')
   const supabase = await createServerClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/auth')
+  if (!user) redirect('/auth?redirect=/profile')
+
 
   const profile = await getCurrentUserProfile()
   // If authenticated but no profile row, redirect to home — not /auth.

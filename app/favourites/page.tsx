@@ -15,7 +15,7 @@ export default async function FavouritesPage() {
   const { data: { user } } = await supabase.auth.getUser()
   
   if (!user) {
-    redirect('/auth')
+    redirect('/auth?redirect=/favourites')
   }
 
   const profile = await getCurrentUserProfile()
