@@ -38,6 +38,17 @@ export default function AuthPage() {
 
   const isLogin = mode === "login"
 
+  // If the user is already logged in (client-side check), redirect them away
+  // immediately. This breaks any server-side false-negative redirect loop.
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        router.replace(redirectTo)
+      }
+    })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   // Show info message from redirect (e.g. "Sign in to create a listing")
   useEffect(() => {
     if (infoMessage) {

@@ -21,7 +21,9 @@ export default async function ProfilePage() {
   if (!user) redirect('/auth')
 
   const profile = await getCurrentUserProfile()
-  if (!profile) redirect('/auth')
+  // If authenticated but no profile row, redirect to home — not /auth.
+  // Sending a logged-in user to /auth causes a redirect loop.
+  if (!profile) redirect('/')
 
   const dbListings = await getOwnerListings(profile.id)
   const items = dbListings.map(listing => listingToItem(listing, profile))
