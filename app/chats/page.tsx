@@ -19,7 +19,7 @@ export default async function ChatsPage() {
 
   return (
     <main className="mx-auto w-full max-w-[390px] min-h-dvh px-5 pb-28 pt-2">
-      <PageHeader title={t('title')} subtitle={t('subtitle')} />
+      <PageHeader title={t('title')} subtitle={t('subtitle')} back={false} />
 
       <ChatsList initialConversations={conversations} recentSellers={recentSellers} />
 
