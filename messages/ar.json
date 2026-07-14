@@ -169,7 +169,8 @@
     "agreeToTerms": "أوافق على <termsLink>الشروط والأحكام</termsLink> و<privacyLink>سياسة الخصوصية</privacyLink>",
     "termsAndConditions": "الشروط والأحكام",
     "privacyPolicy": "سياسة الخصوصية",
-    "mustAgreeToTerms": "يجب قبول الشروط والأحكام للتسجيل"
+    "mustAgreeToTerms": "يجب قبول الشروط والأحكام للتسجيل",
+    "close": "إغلاق"
   },
   "Search": {
     "title": "بحث",

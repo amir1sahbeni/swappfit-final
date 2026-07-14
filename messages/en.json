@@ -169,7 +169,8 @@
     "agreeToTerms": "I agree to the <termsLink>Terms & Conditions</termsLink> and <privacyLink>Privacy Policy</privacyLink>",
     "termsAndConditions": "Terms & Conditions",
     "privacyPolicy": "Privacy Policy",
-    "mustAgreeToTerms": "You must agree to the Terms & Conditions to sign up"
+    "mustAgreeToTerms": "You must agree to the Terms & Conditions to sign up",
+    "close": "Close"
   },
   "Search": {
     "title": "Search",

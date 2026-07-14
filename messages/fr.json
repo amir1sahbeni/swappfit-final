@@ -169,7 +169,8 @@
     "agreeToTerms": "J'accepte les <termsLink>Conditions Générales d'Utilisation</termsLink> et la <privacyLink>Politique de Confidentialité</privacyLink>",
     "termsAndConditions": "Conditions Générales d'Utilisation",
     "privacyPolicy": "Politique de Confidentialité",
-    "mustAgreeToTerms": "Tu dois accepter les Conditions Générales pour t'inscrire"
+    "mustAgreeToTerms": "Tu dois accepter les Conditions Générales pour t'inscrire",
+    "close": "Fermer"
   },
   "Search": {
     "title": "Recherche",

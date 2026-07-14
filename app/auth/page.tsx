@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import Image from "next/image"
 import { useRouter, useSearchParams } from "next/navigation"
-import { Mail, Lock, User, ArrowRight, Loader2, MapPin } from "lucide-react"
+import { Mail, Lock, User, ArrowRight, Loader2, MapPin, X } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useTranslations } from 'next-intl'
 
@@ -29,6 +29,10 @@ export default function AuthPage() {
   const [error, setError] = useState("")
   const [agreedToTerms, setAgreedToTerms] = useState(false)
 
+  // Modal state for Terms & Privacy Policy popups
+  const [termsOpen, setTermsOpen] = useState(false)
+  const [privacyOpen, setPrivacyOpen] = useState(false)
+
   const redirectTo = searchParams.get('redirect') || '/'
   const infoMessage = searchParams.get('message') || ''
 
@@ -40,6 +44,16 @@ export default function AuthPage() {
       setError(infoMessage)
     }
   }, [infoMessage])
+
+  // Lock body scroll when a modal is open
+  useEffect(() => {
+    if (termsOpen || privacyOpen) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+    return () => { document.body.style.overflow = '' }
+  }, [termsOpen, privacyOpen])
 
   async function submit(e: React.FormEvent) {
     e.preventDefault()
@@ -235,26 +249,22 @@ export default function AuthPage() {
                 <span className="text-xs leading-relaxed text-muted-foreground">
                   {t.rich('agreeToTerms', {
                     termsLink: (chunks) => (
-                      <a
-                        href="/settings/privacy/terms"
-                        target="_blank"
-                        rel="noopener noreferrer"
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); e.preventDefault(); setTermsOpen(true) }}
                         className="font-semibold text-primary underline-offset-2 hover:underline"
-                        onClick={(e) => e.stopPropagation()}
                       >
                         {chunks}
-                      </a>
+                      </button>
                     ),
                     privacyLink: (chunks) => (
-                      <a
-                        href="/settings/privacy/privacy-policy"
-                        target="_blank"
-                        rel="noopener noreferrer"
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); e.preventDefault(); setPrivacyOpen(true) }}
                         className="font-semibold text-primary underline-offset-2 hover:underline"
-                        onClick={(e) => e.stopPropagation()}
                       >
                         {chunks}
-                      </a>
+                      </button>
                     ),
                   })}
                 </span>
@@ -306,6 +316,265 @@ export default function AuthPage() {
           <span className="font-bold text-primary">{isLogin ? t('createAccount') : t('login')}</span>
         </button>
       </div>
+
+      {/* Terms & Conditions Modal */}
+      {termsOpen && (
+        <div
+          className="fixed inset-0 z-[200] flex items-end justify-center bg-black/70 backdrop-blur-md animate-in fade-in duration-200 sm:items-center"
+          onClick={() => setTermsOpen(false)}
+        >
+          <div
+            className="relative w-full max-w-[420px] max-h-[85dvh] overflow-y-auto rounded-t-3xl sm:rounded-3xl bg-card shadow-2xl animate-in slide-in-from-bottom-4 sm:slide-in-from-bottom-0 duration-300"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Sticky header */}
+            <div className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-border bg-card/90 px-5 py-4 backdrop-blur-xl rounded-t-3xl sm:rounded-t-3xl">
+              <div>
+                <h2 className="text-base font-bold text-foreground">{t('termsAndConditions')}</h2>
+                <p className="text-[11px] text-muted-foreground">SwappFit platform terms</p>
+              </div>
+              <button
+                aria-label={t('close')}
+                onClick={() => setTermsOpen(false)}
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-muted transition-transform active:scale-90"
+              >
+                <X className="h-4 w-4 text-foreground" />
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="px-5 pb-8 pt-5 space-y-6">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">Last Updated: June 2026</p>
+
+              <section>
+                <h3 className="text-sm font-bold text-foreground mb-2">1. Eligibility</h3>
+                <p className="text-sm leading-relaxed text-foreground">
+                  By using SwappFit, you confirm that you are at least 18 years old or have obtained parental consent to use the platform. You must verify your account to participate in transactions. Users under 18 must have explicit parental or guardian consent and supervision for all activities on the platform.
+                </p>
+              </section>
+
+              <section>
+                <h3 className="text-sm font-bold text-foreground mb-2">2. User Responsibilities</h3>
+                <p className="text-sm leading-relaxed text-foreground mb-2">As a SwappFit user, you agree to:</p>
+                <ul className="text-sm leading-relaxed text-foreground list-disc list-inside space-y-1.5">
+                  <li>Create accurate and honest listings with true descriptions of item condition, brand, size, and any defects</li>
+                  <li>Upload clear, representative photos that accurately depict the items being listed</li>
+                  <li>Honor agreed-upon meetup times and locations for in-person exchanges</li>
+                  <li>Communicate respectfully and professionally with other users</li>
+                  <li>Report any suspicious activity or violations of these terms to SwappFit support</li>
+                </ul>
+              </section>
+
+              <section>
+                <h3 className="text-sm font-bold text-foreground mb-2">3. Prohibited Items</h3>
+                <p className="text-sm leading-relaxed text-foreground mb-2">The following items are strictly prohibited on SwappFit:</p>
+                <ul className="text-sm leading-relaxed text-foreground list-disc list-inside space-y-1.5">
+                  <li>Counterfeit or fake branded goods and replicas</li>
+                  <li>Stolen items or items of questionable origin</li>
+                  <li>Non-clothing items unless explicitly agreed upon by both parties in a swap</li>
+                  <li>Items that violate local laws or regulations</li>
+                  <li>Hazardous materials or items that pose safety risks</li>
+                </ul>
+              </section>
+
+              <section>
+                <h3 className="text-sm font-bold text-foreground mb-2">4. Platform Role</h3>
+                <p className="text-sm leading-relaxed text-foreground mb-2">SwappFit serves as a facilitation platform only. We are not responsible for:</p>
+                <ul className="text-sm leading-relaxed text-foreground list-disc list-inside space-y-1.5">
+                  <li>Transaction disputes between users</li>
+                  <li>Disagreements about item condition or description</li>
+                  <li>Meetup safety or incidents during in-person exchanges</li>
+                  <li>The quality, authenticity, or condition of items listed on the platform</li>
+                  <li>Any financial losses resulting from user interactions</li>
+                </ul>
+                <p className="text-sm leading-relaxed text-foreground mt-3">
+                  All transactions are conducted cash-in-person directly between users. SwappFit does not handle payments, escrow services, or transaction processing.
+                </p>
+              </section>
+
+              <section>
+                <h3 className="text-sm font-bold text-foreground mb-2">5. Listing Rules</h3>
+                <ul className="text-sm leading-relaxed text-foreground list-disc list-inside space-y-1.5">
+                  <li>Users are limited to 5 listings per day</li>
+                  <li>All listings must include accurate photos and descriptions</li>
+                  <li>Misleading photos or descriptions are grounds for account suspension</li>
+                  <li>Items must be available for swap or sale at the listed price</li>
+                </ul>
+              </section>
+
+              <section>
+                <h3 className="text-sm font-bold text-foreground mb-2">6. Account Termination</h3>
+                <p className="text-sm leading-relaxed text-foreground mb-2">SwappFit reserves the right to suspend or terminate accounts that:</p>
+                <ul className="text-sm leading-relaxed text-foreground list-disc list-inside space-y-1.5">
+                  <li>Violate these terms of service</li>
+                  <li>Engage in fraudulent or deceptive practices</li>
+                  <li>Harass, threaten, or abuse other users</li>
+                  <li>List prohibited items repeatedly</li>
+                  <li>Fail to honor transaction commitments</li>
+                </ul>
+              </section>
+
+              <section>
+                <h3 className="text-sm font-bold text-foreground mb-2">7. Governing Law</h3>
+                <p className="text-sm leading-relaxed text-foreground">
+                  These terms are governed by the laws of Tunisia. Any disputes arising from the use of SwappFit shall be resolved in accordance with Tunisian law and the jurisdiction of Tunisian courts.
+                </p>
+              </section>
+
+              <section>
+                <h3 className="text-sm font-bold text-foreground mb-2">8. Contact</h3>
+                <p className="text-sm leading-relaxed text-foreground">
+                  For questions about these terms, please contact SwappFit support through the Help Center in the app.
+                </p>
+              </section>
+
+              <button
+                onClick={() => setTermsOpen(false)}
+                className="w-full flex h-11 items-center justify-center rounded-full bg-brand-gradient text-sm font-semibold text-primary-foreground shadow-[0_8px_20px_rgba(192,57,91,0.28)] transition-transform active:scale-95"
+              >
+                {t('close')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Privacy Policy Modal */}
+      {privacyOpen && (
+        <div
+          className="fixed inset-0 z-[200] flex items-end justify-center bg-black/70 backdrop-blur-md animate-in fade-in duration-200 sm:items-center"
+          onClick={() => setPrivacyOpen(false)}
+        >
+          <div
+            className="relative w-full max-w-[420px] max-h-[85dvh] overflow-y-auto rounded-t-3xl sm:rounded-3xl bg-card shadow-2xl animate-in slide-in-from-bottom-4 sm:slide-in-from-bottom-0 duration-300"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Sticky header */}
+            <div className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-border bg-card/90 px-5 py-4 backdrop-blur-xl rounded-t-3xl sm:rounded-t-3xl">
+              <div>
+                <h2 className="text-base font-bold text-foreground">{t('privacyPolicy')}</h2>
+                <p className="text-[11px] text-muted-foreground">How we handle your data</p>
+              </div>
+              <button
+                aria-label={t('close')}
+                onClick={() => setPrivacyOpen(false)}
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-muted transition-transform active:scale-90"
+              >
+                <X className="h-4 w-4 text-foreground" />
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="px-5 pb-8 pt-5 space-y-6">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">Last Updated: June 2026</p>
+
+              <section>
+                <h3 className="text-sm font-bold text-foreground mb-2">1. Data Collection</h3>
+                <p className="text-sm leading-relaxed text-foreground mb-2">SwappFit collects the following data to provide and improve our services:</p>
+                <ul className="text-sm leading-relaxed text-foreground list-disc list-inside space-y-1.5">
+                  <li><strong>Account Information:</strong> Name, email address, phone number, profile photo</li>
+                  <li><strong>Profile Data:</strong> Username, bio, location, rating and review information</li>
+                  <li><strong>Listing Content:</strong> Item photos, descriptions, brand, size, condition, pricing</li>
+                  <li><strong>Messages:</strong> Chat conversations with other users</li>
+                  <li><strong>Transaction Data:</strong> Swap proposals, exchange history, reviews</li>
+                  <li><strong>Device Information:</strong> IP address, device type, browser information for security purposes</li>
+                </ul>
+              </section>
+
+              <section>
+                <h3 className="text-sm font-bold text-foreground mb-2">2. Data Usage</h3>
+                <ul className="text-sm leading-relaxed text-foreground list-disc list-inside space-y-1.5">
+                  <li>Matching you with nearby listings and potential swap partners</li>
+                  <li>Account security</li>
+                  <li>Sending notifications about messages, swap proposals, and account activity</li>
+                  <li>Platform safety and fraud prevention</li>
+                  <li>Improving our services and user experience</li>
+                  <li>Complying with legal obligations</li>
+                </ul>
+              </section>
+
+              <section>
+                <h3 className="text-sm font-bold text-foreground mb-2">3. Data Sharing</h3>
+                <p className="text-sm leading-relaxed text-foreground mb-2">SwappFit does not sell your personal data to third parties. We only share data in the following circumstances:</p>
+                <ul className="text-sm leading-relaxed text-foreground list-disc list-inside space-y-1.5">
+                  <li><strong>Supabase Infrastructure:</strong> Your data is stored and processed through Supabase, our database and authentication provider, as necessary for service delivery</li>
+                  <li><strong>Other Users:</strong> Your profile information (name, username, location, ratings) is visible to other users on the platform. Your messages are shared with conversation participants</li>
+                  <li><strong>Legal Requirements:</strong> We may disclose data if required by law or to protect our rights and safety</li>
+                </ul>
+              </section>
+
+              <section>
+                <h3 className="text-sm font-bold text-foreground mb-2">4. User Rights</h3>
+                <ul className="text-sm leading-relaxed text-foreground list-disc list-inside space-y-1.5">
+                  <li><strong>Access:</strong> View your profile data and activity through the app</li>
+                  <li><strong>Correction:</strong> Update your profile information at any time</li>
+                  <li><strong>Deletion:</strong> Request account deletion through the &quot;Delete Account&quot; option in Privacy &amp; Security settings</li>
+                  <li><strong>Data Export:</strong> Download your data using the &quot;Download My Data&quot; feature in Privacy &amp; Security settings</li>
+                </ul>
+              </section>
+
+              <section>
+                <h3 className="text-sm font-bold text-foreground mb-2">5. Cookies and Local Storage</h3>
+                <ul className="text-sm leading-relaxed text-foreground list-disc list-inside space-y-1.5">
+                  <li>Language preference settings</li>
+                  <li>Search history for quick access</li>
+                  <li>Theme (dark/light mode) preferences</li>
+                  <li>Authentication session management</li>
+                </ul>
+              </section>
+
+              <section>
+                <h3 className="text-sm font-bold text-foreground mb-2">6. Data Retention</h3>
+                <p className="text-sm leading-relaxed text-foreground">
+                  When you request account deletion, your data will be permanently deleted from our servers within 30 days of the request. This includes your profile, listings, messages, and all associated data. Some data may be retained in backup systems for security purposes but will not be accessible or used.
+                </p>
+              </section>
+
+              <section>
+                <h3 className="text-sm font-bold text-foreground mb-2">7. Data Security</h3>
+                <p className="text-sm leading-relaxed text-foreground">
+                  SwappFit implements industry-standard security measures to protect your data, including encryption, secure authentication, and regular security audits. However, no method of transmission over the internet is completely secure, and we cannot guarantee absolute security.
+                </p>
+              </section>
+
+              <section>
+                <h3 className="text-sm font-bold text-foreground mb-2">8. Children&apos;s Privacy</h3>
+                <p className="text-sm leading-relaxed text-foreground">
+                  SwappFit is not intended for users under 18 years of age. We do not knowingly collect personal information from children under 18. If we become aware that we have collected data from a child under 18, we will take steps to delete such information.
+                </p>
+              </section>
+
+              <section>
+                <h3 className="text-sm font-bold text-foreground mb-2">9. Changes to This Policy</h3>
+                <p className="text-sm leading-relaxed text-foreground">
+                  We may update this privacy policy from time to time. We will notify users of significant changes by posting the new policy on this page and updating the &quot;Last Updated&quot; date.
+                </p>
+              </section>
+
+              <section>
+                <h3 className="text-sm font-bold text-foreground mb-2">10. Governing Law</h3>
+                <p className="text-sm leading-relaxed text-foreground">
+                  This privacy policy is governed by the laws of Tunisia. Any disputes regarding data handling will be resolved in accordance with Tunisian data protection regulations and the jurisdiction of Tunisian courts.
+                </p>
+              </section>
+
+              <section>
+                <h3 className="text-sm font-bold text-foreground mb-2">11. Contact Information</h3>
+                <p className="text-sm leading-relaxed text-foreground">
+                  For data requests, privacy concerns, or questions about this policy, please contact SwappFit support through the Help Center in the app or email privacy@swappfit.com
+                </p>
+              </section>
+
+              <button
+                onClick={() => setPrivacyOpen(false)}
+                className="w-full flex h-11 items-center justify-center rounded-full bg-brand-gradient text-sm font-semibold text-primary-foreground shadow-[0_8px_20px_rgba(192,57,91,0.28)] transition-transform active:scale-95"
+              >
+                {t('close')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   )
 }
