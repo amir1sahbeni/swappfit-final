@@ -100,8 +100,8 @@ export async function getListingById(id: string): Promise<Listing | null> {
   const { data, error } = await supabase
     .from('listings')
     .select(`
-      *,
-      profiles (*)
+      id, seller_id, name, brand, size, description, price, images, category, condition, status, created_at, updated_at, featured_until, listing_lat, listing_lng, size_type, gender,
+      profiles ( id, name, handle, avatar_url, is_premium, location, governorate, city, location_sharing_enabled, precise_lat, precise_lng )
     `)
     .eq('id', id)
     .single()
@@ -115,12 +115,13 @@ export async function getUserListings(userId: string): Promise<Listing[]> {
   const { data, error } = await supabase
     .from('listings')
     .select(`
-      *,
-      profiles ( location, governorate, city, location_sharing_enabled, precise_lat, precise_lng )
+      id, seller_id, name, brand, size, description, price, images, category, condition, status, created_at, updated_at, featured_until, listing_lat, listing_lng, size_type, gender,
+      profiles ( id, name, handle, avatar_url, is_premium, location, governorate, city, location_sharing_enabled, precise_lat, precise_lng )
     `)
     .eq('seller_id', userId)
     .eq('status', 'active')
     .order('created_at', { ascending: false })
+    .limit(100)
 
   if (error) return []
   return data as Listing[]
@@ -131,12 +132,13 @@ export async function getOwnerListings(userId: string): Promise<Listing[]> {
   const { data, error } = await supabase
     .from('listings')
     .select(`
-      *,
-      profiles ( location, governorate, city, location_sharing_enabled, precise_lat, precise_lng )
+      id, seller_id, name, brand, size, description, price, images, category, condition, status, created_at, updated_at, featured_until, listing_lat, listing_lng, size_type, gender,
+      profiles ( id, name, handle, avatar_url, is_premium, location, governorate, city, location_sharing_enabled, precise_lat, precise_lng )
     `)
     .eq('seller_id', userId)
     .in('status', ['active', 'swapped'])
     .order('created_at', { ascending: false })
+    .limit(100)
 
   if (error) return []
   return data as Listing[]
@@ -147,12 +149,13 @@ export async function searchListings(query: string): Promise<Listing[]> {
   const { data, error } = await supabase
     .from('listings')
     .select(`
-      *,
-      profiles ( location, governorate, city, location_sharing_enabled, precise_lat, precise_lng )
+      id, seller_id, name, brand, size, description, price, images, category, condition, status, created_at, updated_at, featured_until, listing_lat, listing_lng, size_type, gender,
+      profiles ( id, name, handle, avatar_url, is_premium, location, governorate, city, location_sharing_enabled, precise_lat, precise_lng )
     `)
     .eq('status', 'active')
     .or(`name.ilike.%${query}%,brand.ilike.%${query}%`)
     .order('created_at', { ascending: false })
+    .limit(50)
 
   if (error) return []
   return data as Listing[]

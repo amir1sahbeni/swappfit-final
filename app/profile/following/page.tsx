@@ -2,6 +2,7 @@ import { createServerClient } from "@/lib/supabase/server"
 import { getFollowing } from "@/lib/queries/follows"
 import { redirect } from "next/navigation"
 import Link from "next/link"
+import Image from "next/image"
 import { ChevronLeft } from "lucide-react"
 
 export default async function FollowingPage() {
@@ -26,7 +27,7 @@ export default async function FollowingPage() {
         ) : (
           following.map((profile) => (
             <Link key={profile.id} href={`/user/${profile.id}`} className="flex items-center gap-4 bg-card p-3 rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.03)] active:scale-95 transition-transform">
-              <img src={profile.avatar_url || "/placeholder.svg"} className="h-12 w-12 rounded-full object-cover" alt={profile.name} />
+              <Image src={profile.avatar_url || "/placeholder.svg"} width={48} height={48} className="rounded-full object-cover" alt={profile.name} />
               <div>
                 <p className="font-bold text-foreground">{profile.name}</p>
                 <p className="text-sm text-muted-foreground">@{profile.handle?.replace('@', '') || profile.handle}</p>

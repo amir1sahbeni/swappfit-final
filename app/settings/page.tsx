@@ -8,6 +8,7 @@ import { useTheme } from 'next-themes'
 import { useAppContext } from '@/components/app-context'
 import { Star } from 'lucide-react'
 import { useTranslations } from 'next-intl'
+import Image from 'next/image'
 
 export default function SettingsPage() {
   const t = useTranslations('Settings')
@@ -124,10 +125,12 @@ export default function SettingsPage() {
           className="flex items-center justify-between rounded-2xl bg-card p-4 shadow-[0_2px_10px_rgba(0,0,0,0.03)] cursor-pointer active:scale-[0.98] transition-transform"
         >
           <div className="flex items-center gap-4">
-            <img 
+            <Image 
               src={profile?.avatar_url || '/placeholder.svg'} 
               alt={profile?.name || ''} 
-              className="h-14 w-14 rounded-full object-cover" 
+              width={56}
+              height={56}
+              className="rounded-full object-cover" 
             />
             <div>
               <p className="text-[15px] font-bold text-foreground">{profile?.name || t('loading')}</p>

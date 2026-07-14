@@ -6,11 +6,11 @@ export async function getProposalById(id: string): Promise<SwapProposal | null> 
   const { data, error } = await supabase
     .from('swap_proposals')
     .select(`
-      *,
-      offered_item:listings!offered_item_id(*),
-      wanted_item:listings!wanted_item_id(*),
-      proposer:profiles!proposer_id(*),
-      receiver:profiles!receiver_id(*)
+      id, proposer_id, receiver_id, offered_item_id, wanted_item_id, status, message, viewed, completed_at, created_at, updated_at,
+      offered_item:listings!offered_item_id(id, seller_id, name, brand, size, description, price, images, category, condition, status, created_at, listing_lat, listing_lng),
+      wanted_item:listings!wanted_item_id(id, seller_id, name, brand, size, description, price, images, category, condition, status, created_at, listing_lat, listing_lng),
+      proposer:profiles!proposer_id(id, name, handle, avatar_url, is_premium, rating, review_count),
+      receiver:profiles!receiver_id(id, name, handle, avatar_url, is_premium, rating, review_count)
     `)
     .eq('id', id)
     .single()
@@ -24,14 +24,15 @@ export async function getUserProposals(userId: string): Promise<SwapProposal[]> 
   const { data, error } = await supabase
     .from('swap_proposals')
     .select(`
-      *,
-      offered_item:listings!offered_item_id(*),
-      wanted_item:listings!wanted_item_id(*),
-      proposer:profiles!proposer_id(*),
-      receiver:profiles!receiver_id(*)
+      id, proposer_id, receiver_id, offered_item_id, wanted_item_id, status, message, viewed, completed_at, created_at, updated_at,
+      offered_item:listings!offered_item_id(id, seller_id, name, brand, size, description, price, images, category, condition, status, created_at, listing_lat, listing_lng),
+      wanted_item:listings!wanted_item_id(id, seller_id, name, brand, size, description, price, images, category, condition, status, created_at, listing_lat, listing_lng),
+      proposer:profiles!proposer_id(id, name, handle, avatar_url, is_premium, rating, review_count),
+      receiver:profiles!receiver_id(id, name, handle, avatar_url, is_premium, rating, review_count)
     `)
     .or(`proposer_id.eq.${userId},receiver_id.eq.${userId}`)
     .order('created_at', { ascending: false })
+    .limit(100)
 
   if (error || !data) return []
   return data as SwapProposal[]

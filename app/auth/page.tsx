@@ -27,6 +27,7 @@ export default function AuthPage() {
   const [city, setCity] = useState("")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
+  const [agreedToTerms, setAgreedToTerms] = useState(false)
 
   const redirectTo = searchParams.get('redirect') || '/'
   const infoMessage = searchParams.get('message') || ''
@@ -51,6 +52,11 @@ export default function AuthPage() {
 
     if (password.length < 8) {
       setError(t('passwordMinLength'))
+      return
+    }
+
+    if (!isLogin && !agreedToTerms) {
+      setError(t('mustAgreeToTerms'))
       return
     }
 
@@ -82,6 +88,19 @@ export default function AuthPage() {
           },
         })
         if (error) throw error
+
+        // Persist terms agreement and location on the profile row
+        if (data.user) {
+          await supabase
+            .from('profiles')
+            .upsert({
+              id: data.user.id,
+              agreed_to_terms_at: new Date().toISOString(),
+              terms_version: '1.0',
+              governorate: governorate,
+              city: city
+            })
+        }
 
         if (data.user && !data.session) {
           setError(t('checkEmailConfirm'))
@@ -202,6 +221,46 @@ export default function AuthPage() {
               />
             </InputField>
 
+            {/* Terms & Conditions checkbox — signup only */}
+            {!isLogin && (
+              <label className="flex cursor-pointer items-start gap-3 rounded-xl bg-muted px-4 py-3.5">
+                <input
+                  id="agree-terms"
+                  type="checkbox"
+                  checked={agreedToTerms}
+                  onChange={(e) => setAgreedToTerms(e.target.checked)}
+                  disabled={loading}
+                  className="mt-0.5 h-4 w-4 shrink-0 cursor-pointer accent-primary"
+                />
+                <span className="text-xs leading-relaxed text-muted-foreground">
+                  {t.rich('agreeToTerms', {
+                    termsLink: (chunks) => (
+                      <a
+                        href="/settings/privacy/terms"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="font-semibold text-primary underline-offset-2 hover:underline"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {chunks}
+                      </a>
+                    ),
+                    privacyLink: (chunks) => (
+                      <a
+                        href="/settings/privacy/privacy-policy"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="font-semibold text-primary underline-offset-2 hover:underline"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {chunks}
+                      </a>
+                    ),
+                  })}
+                </span>
+              </label>
+            )}
+
             {error && (
               <p className="text-xs text-destructive mt-1">{error}</p>
             )}
@@ -219,8 +278,8 @@ export default function AuthPage() {
 
             <button
               type="submit"
-              disabled={loading}
-              className="mt-1 flex h-12 w-full items-center justify-center gap-2 rounded-full bg-brand-gradient text-sm font-semibold text-primary-foreground shadow-[0_12px_24px_rgba(192,57,91,0.32)] transition-transform active:scale-95 disabled:opacity-50"
+              disabled={loading || (!isLogin && !agreedToTerms)}
+              className="mt-1 flex h-12 w-full items-center justify-center gap-2 rounded-full bg-brand-gradient text-sm font-semibold text-primary-foreground shadow-[0_12px_24px_rgba(192,57,91,0.32)] transition-transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? (
                 <Loader2 className="h-5 w-5 animate-spin" />
@@ -238,6 +297,7 @@ export default function AuthPage() {
           onClick={() => {
             setMode(isLogin ? "signup" : "login")
             setError("")
+            setAgreedToTerms(false)
           }}
           className="mt-5 w-full text-center text-sm text-muted-foreground transition-colors active:scale-95"
           disabled={loading}

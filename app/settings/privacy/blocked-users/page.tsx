@@ -3,6 +3,7 @@ import { getBlockedUsers } from "@/lib/queries/blocks"
 import { unblockUser } from "@/app/actions/blocks"
 import { redirect, RedirectType } from "next/navigation"
 import Link from "next/link"
+import Image from "next/image"
 import { ChevronLeft } from "lucide-react"
 
 export default async function BlockedUsersPage() {
@@ -27,7 +28,7 @@ export default async function BlockedUsersPage() {
         ) : (
           blockedUsers.map((profile) => (
             <div key={profile.id} className="flex items-center gap-4 bg-card p-3 rounded-2xl shadow-[0_4px_20px_rgba(192,57,91,0.08)]">
-              <img src={profile.avatar_url || "/placeholder.svg"} className="h-12 w-12 rounded-full object-cover" alt={profile.name} />
+              <Image src={profile.avatar_url || "/placeholder.svg"} width={48} height={48} className="rounded-full object-cover" alt={profile.name} />
               <div className="flex-1">
                 <p className="font-bold text-foreground">{profile.name}</p>
                 <p className="text-sm text-muted-foreground">@{profile.handle?.replace('@', '') || profile.handle}</p>

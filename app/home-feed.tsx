@@ -64,15 +64,27 @@ export function HomeFeed({ initialItems, followingIds = [], currentUserProfile }
   const fetchFreshListings = useCallback(async () => {
     try {
       const supabase = createClient()
-      const { data: listings } = await supabase
-        .from('listings')
-        .select(`
-          *,
-          profiles(id, name, avatar_url, is_premium, governorate, city, precise_lat, precise_lng)
-        `)
-        .eq('status', 'active')
-        .order('created_at', { ascending: false })
-        .limit(50)
+      const { data: { user } } = await supabase.auth.getUser()
+      
+      let { data: listings, error } = await supabase.rpc('get_distance_sorted_listings', {
+        p_user_id: user?.id || null,
+        p_limit: 50,
+        p_offset: 0
+      })
+
+      if (error || !listings) {
+        console.warn('RPC function not available, falling back to simple query:', error?.message)
+        const res = await supabase
+          .from('listings')
+          .select(`
+            *,
+            profiles(id, name, avatar_url, is_premium, governorate, city, precise_lat, precise_lng)
+          `)
+          .eq('status', 'active')
+          .order('created_at', { ascending: false })
+          .limit(50)
+        listings = res.data
+      }
 
       if (listings) {
         // Map to Item shape (simplified — keeps current structure consistent)
@@ -172,13 +184,14 @@ export function HomeFeed({ initialItems, followingIds = [], currentUserProfile }
   const pullProgress = Math.min(pullY / (PULL_THRESHOLD * 0.5), 1)
 
   return (
-    <div
-      ref={mainRef}
-      style={{
-        transform: showPullIndicator ? `translateY(${Math.min(pullY * 0.4, 32)}px)` : 'translateY(0)',
-        transition: isRefreshing || pullY === 0 ? 'transform 0.3s ease' : 'none',
-      }}
-    >
+    <>
+      <div
+        ref={mainRef}
+        style={{
+          transform: showPullIndicator ? `translateY(${Math.min(pullY * 0.4, 32)}px)` : 'translateY(0)',
+          transition: isRefreshing || pullY === 0 ? 'transform 0.3s ease' : 'none',
+        }}
+      >
       {/* Pull-to-refresh indicator */}
       {showPullIndicator && (
         <div
@@ -276,7 +289,7 @@ export function HomeFeed({ initialItems, followingIds = [], currentUserProfile }
               <section className="mt-6">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">{t("nearby")}</p>
                 <div className="mt-3">
-                  <ItemCardHero item={nearbyHero} currentUserProfile={currentUserProfile} />
+                  <ItemCardHero item={nearbyHero} currentUserProfile={currentUserProfile} priority={true} />
                 </div>
               </section>
             )}
@@ -296,9 +309,9 @@ export function HomeFeed({ initialItems, followingIds = [], currentUserProfile }
             </section>
           </>
         )}
-
-        <BottomNav />
       </main>
     </div>
+    <BottomNav />
+    </>
   )
 }

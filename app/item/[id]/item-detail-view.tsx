@@ -1,11 +1,13 @@
 "use client"
 
-import { useState, useTransition, useEffect } from "react"
+import { useState, useTransition, useEffect, useRef } from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { ChevronLeft, Heart, Share2, Star, MapPin, ShieldCheck, Loader2, MoreVertical, Trash2, X, ZoomIn } from "lucide-react"
 import type { Item, Seller, Profile } from "@/lib/types"
-import { toggleSaveListing, deleteListing } from "@/app/actions/listings"
+import { deleteListing } from "@/app/actions/listings"
+import { toggleFavourite } from "@/app/actions/favourites"
 import { createPurchase } from "@/app/actions/purchases"
 import { calculateDistance, formatDistance } from "@/lib/utils"
 import { useTranslations } from 'next-intl'
@@ -18,6 +20,101 @@ export function ItemDetailView({ item, seller, initialSaved, isOwner, currentUse
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [viewerOpen, setViewerOpen] = useState(false)
   const [listingStatus, setListingStatus] = useState(item.status || 'active')
+
+  // Zoom and Pan states
+  const [scale, setScale] = useState(1)
+  const [pan, setPan] = useState({ x: 0, y: 0 })
+  const [showPinchHint, setShowPinchHint] = useState(true)
+  const touchState = useRef({
+    isZooming: false,
+    initialDistance: 0,
+    initialScale: 1,
+    isPanning: false,
+    startX: 0,
+    startY: 0,
+    initialPan: { x: 0, y: 0 },
+    lastTapTime: 0
+  })
+
+  useEffect(() => {
+    const timer = setTimeout(() => setShowPinchHint(false), 2000)
+    return () => clearTimeout(timer)
+  }, [])
+
+  useEffect(() => {
+    if (scale > 1) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+    return () => { document.body.style.overflow = '' }
+  }, [scale])
+
+  function getDistance(touches: React.TouchList) {
+    const dx = touches[0].clientX - touches[1].clientX
+    const dy = touches[0].clientY - touches[1].clientY
+    return Math.sqrt(dx * dx + dy * dy)
+  }
+
+  function handleTouchStart(e: React.TouchEvent) {
+    if (e.touches.length === 2) {
+      touchState.current.isZooming = true
+      touchState.current.initialDistance = getDistance(e.touches)
+      touchState.current.initialScale = scale
+    } else if (e.touches.length === 1) {
+      const now = Date.now()
+      if (now - touchState.current.lastTapTime < 300) {
+        // Double tap
+        if (scale > 1) {
+          setScale(1)
+          setPan({ x: 0, y: 0 })
+        } else {
+          setScale(2.5)
+        }
+        touchState.current.lastTapTime = 0
+      } else {
+        touchState.current.lastTapTime = now
+        if (scale > 1) {
+          touchState.current.isPanning = true
+          touchState.current.startX = e.touches[0].clientX
+          touchState.current.startY = e.touches[0].clientY
+          touchState.current.initialPan = { ...pan }
+        }
+      }
+    }
+  }
+
+  function handleTouchMove(e: React.TouchEvent) {
+    if (touchState.current.isZooming && e.touches.length === 2) {
+      // Prevent default scrolling when zooming
+      if (e.cancelable) e.preventDefault()
+      const currentDistance = getDistance(e.touches)
+      const newScale = touchState.current.initialScale * (currentDistance / touchState.current.initialDistance)
+      setScale(Math.min(Math.max(1, newScale), 4))
+    } else if (touchState.current.isPanning && e.touches.length === 1 && scale > 1) {
+      // Prevent default scrolling when panning
+      if (e.cancelable) e.preventDefault()
+      const dx = e.touches[0].clientX - touchState.current.startX
+      const dy = e.touches[0].clientY - touchState.current.startY
+      
+      const maxPanX = (window.innerWidth * (scale - 1)) / 2
+      const maxPanY = (window.innerWidth * (scale - 1)) / 2 
+      
+      setPan({
+        x: Math.min(Math.max(touchState.current.initialPan.x + dx, -maxPanX), maxPanX),
+        y: Math.min(Math.max(touchState.current.initialPan.y + dy, -maxPanY), maxPanY)
+      })
+    }
+  }
+
+  function handleTouchEnd() {
+    touchState.current.isZooming = false
+    touchState.current.isPanning = false
+    if (scale < 1) {
+      setScale(1)
+      setPan({ x: 0, y: 0 })
+    }
+  }
 
   // Realtime stale guard: if another buyer purchases/swaps while we're viewing, hide the action buttons
   useEffect(() => {
@@ -40,7 +137,7 @@ export function ItemDetailView({ item, seller, initialSaved, isOwner, currentUse
     const newSaved = !saved
     setSaved(newSaved)
     startTransition(() => {
-      toggleSaveListing(item.id, !newSaved)
+      toggleFavourite(item.id, newSaved)
     })
   }
 
@@ -96,17 +193,27 @@ export function ItemDetailView({ item, seller, initialSaved, isOwner, currentUse
   return (
     <main className="mx-auto w-full max-w-[390px] min-h-dvh pb-44">
       {/* Image with floating controls */}
-      <div className="relative">
+      <div className="relative overflow-hidden">
         {/* Bug 8: tapping image opens fullscreen viewer */}
         <button
-          onClick={() => setViewerOpen(true)}
-          className="block w-full text-left"
+          onClick={() => {
+            if (scale === 1) setViewerOpen(true)
+          }}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+          onTouchCancel={handleTouchEnd}
+          className="block w-full text-left relative aspect-square transition-transform duration-100 ease-out"
+          style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${scale})`, touchAction: scale > 1 ? 'none' : 'auto' }}
           aria-label="View full image"
         >
-          <img
+          <Image
             src={item.image || "/placeholder.svg"}
             alt={item.name}
-            className="aspect-square w-full object-cover no-rtl-flip"
+            fill
+            sizes="(max-width: 768px) 100vw, 50vw"
+            priority={true}
+            className="object-cover no-rtl-flip pointer-events-none"
           />
         </button>
         <button
@@ -150,8 +257,11 @@ export function ItemDetailView({ item, seller, initialSaved, isOwner, currentUse
           {item.condition}
         </span>
         {/* Tap to zoom hint */}
-        <span className="absolute bottom-4 right-4 flex items-center gap-1 rounded-full bg-black/55 px-2 py-1 text-[10px] font-medium text-white backdrop-blur">
+        <span 
+          className={`absolute bottom-4 right-4 flex items-center gap-1 rounded-full bg-black/55 px-2 py-1 text-[10px] font-medium text-white backdrop-blur transition-opacity duration-500 ${showPinchHint ? 'opacity-100' : 'opacity-0'}`}
+        >
           <ZoomIn className="h-3 w-3" />
+          {t('pinchToZoom', { fallback: 'Pinch to zoom' })}
         </span>
       </div>
 
@@ -195,7 +305,7 @@ export function ItemDetailView({ item, seller, initialSaved, isOwner, currentUse
             href={`/user/${seller.id}`}
             className="mt-3 flex items-center gap-3 rounded-2xl bg-card p-3 shadow-[0_4px_20px_rgba(192,57,91,0.08)] transition-transform active:scale-95"
           >
-            <img src={seller.avatar || "/placeholder.svg"} alt={seller.name} className="h-12 w-12 rounded-full object-cover no-rtl-flip" />
+            <Image src={seller.avatar || "/placeholder.svg"} alt={seller.name} width={48} height={48} className="rounded-full object-cover no-rtl-flip" />
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-bold text-foreground">{seller.name}</p>
               <p className="flex items-center gap-1 text-xs text-muted-foreground">
@@ -288,12 +398,15 @@ export function ItemDetailView({ item, seller, initialSaved, isOwner, currentUse
           >
             <X className="h-5 w-5" />
           </button>
-          <img
-            src={item.image || "/placeholder.svg"}
-            alt={item.name}
-            className="max-h-[85vh] max-w-[95vw] rounded-2xl object-contain shadow-2xl no-rtl-flip"
-            onClick={(e) => e.stopPropagation()}
-          />
+          <div className="relative w-[95vw] h-[85vh] max-w-4xl">
+            <Image
+              src={item.image || "/placeholder.svg"}
+              alt={item.name}
+              fill
+              className="rounded-2xl object-contain shadow-2xl no-rtl-flip"
+              onClick={(e) => e.stopPropagation()}
+            />
+          </div>
         </div>
       )}
     </main>

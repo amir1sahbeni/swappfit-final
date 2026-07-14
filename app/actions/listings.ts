@@ -14,6 +14,10 @@ export async function createListing(formData: {
   category: string
   condition: string
   images: string[]
+  size_type?: string
+  gender?: string
+  lat?: number | null
+  lng?: number | null
 }) {
   const supabase = await createServerClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -40,10 +44,15 @@ export async function createListing(formData: {
     category: formData.category,
     condition: formData.condition,
     images: formData.images,
+    size_type: formData.size_type,
+    gender: formData.gender,
     status: 'active',
   }
 
-  if (profile?.location_sharing_enabled && profile.precise_lat && profile.precise_lng) {
+  if (formData.lat && formData.lng) {
+    listingData.listing_lat = formData.lat
+    listingData.listing_lng = formData.lng
+  } else if (profile?.location_sharing_enabled && profile.precise_lat && profile.precise_lng) {
     listingData.listing_lat = profile.precise_lat
     listingData.listing_lng = profile.precise_lng
   }

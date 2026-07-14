@@ -7,6 +7,7 @@ import { PageHeader } from "@/components/page-header"
 import type { Profile } from "@/lib/types"
 import { createClient } from "@/lib/supabase/client"
 import { useTranslations } from 'next-intl'
+import { compressImage } from "@/lib/utils/compressImage"
 
 export function EditProfileForm({ profile }: { profile: Profile }) {
   const t = useTranslations('EditProfile')
@@ -19,6 +20,7 @@ export function EditProfileForm({ profile }: { profile: Profile }) {
   const [file, setFile] = useState<File | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string>(profile.avatar_url || "")
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitStatus, setSubmitStatus] = useState<'idle' | 'compressing' | 'uploading' | 'saving'>('idle')
   const [error, setError] = useState("")
   
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -34,6 +36,7 @@ export function EditProfileForm({ profile }: { profile: Profile }) {
 
   const handleSubmit = async () => {
     setIsSubmitting(true)
+    setSubmitStatus('compressing')
     setError("")
 
     try {
@@ -41,12 +44,15 @@ export function EditProfileForm({ profile }: { profile: Profile }) {
 
       // Upload image if changed
       if (file) {
-        const fileExt = file.name.split('.').pop()
+        const compressedFile = await compressImage(file, 400, 400, 0.8)
+        setSubmitStatus('uploading')
+
+        const fileExt = compressedFile.name.split('.').pop()
         const fileName = `${profile.id}_${Date.now()}.${fileExt}`
         
         const { error: uploadError } = await supabase.storage
           .from('avatars')
-          .upload(fileName, file, { cacheControl: '3600', upsert: false })
+          .upload(fileName, compressedFile, { cacheControl: '3600', upsert: false })
           
         if (uploadError) throw uploadError
         
@@ -57,6 +63,7 @@ export function EditProfileForm({ profile }: { profile: Profile }) {
         finalAvatarUrl = publicUrlData.publicUrl
       }
 
+      setSubmitStatus('saving')
       // Update profile
       const { error: updateError } = await supabase
         .from('profiles')
@@ -75,6 +82,7 @@ export function EditProfileForm({ profile }: { profile: Profile }) {
     } catch (err: any) {
       setError(err.message || t('failedToUpdate'))
       setIsSubmitting(false)
+      setSubmitStatus('idle')
     }
   }
 
@@ -149,7 +157,9 @@ export function EditProfileForm({ profile }: { profile: Profile }) {
           {isSubmitting ? (
             <>
               <Loader2 className="h-4 w-4 animate-spin" />
-              {t('saving')}
+              {submitStatus === 'compressing' ? t('optimizingImage', { fallback: 'Optimizing image...' }) : 
+               submitStatus === 'uploading' ? t('uploading', { fallback: 'Uploading...' }) : 
+               t('saving', { fallback: 'Saving...' })}
             </>
           ) : (
             <>

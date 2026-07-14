@@ -1,6 +1,7 @@
 "use client"
 
 import { MapPin, Star } from "lucide-react"
+import Image from "next/image"
 
 import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
@@ -14,10 +15,13 @@ export function ProfileCard({ profile, followStats }: { profile: Profile; follow
   return (
     <div className="flex flex-col items-center rounded-3xl bg-card p-6 shadow-[0_4px_20px_rgba(0,0,0,0.03)] mt-2 relative">
 
-      <img 
+      <Image 
         src={profile.avatar_url || '/placeholder.svg'} 
         alt={profile.name} 
-        className="h-24 w-24 rounded-full object-cover no-rtl-flip" 
+        width={96}
+        height={96}
+        priority
+        className="rounded-full object-cover no-rtl-flip" 
       />
       <h2 className="mt-4 text-xl font-bold text-foreground">{profile.name}</h2>
       <p className="text-sm text-muted-foreground">@{profile.handle?.replace('@', '') || profile.handle}</p>
@@ -28,7 +32,7 @@ export function ProfileCard({ profile, followStats }: { profile: Profile; follow
       
       <p className="mt-3 flex items-center gap-1.5 text-sm text-muted-foreground">
         <MapPin className="h-4 w-4" />
-        {profile.location || t('locationNotSet')}
+        {profile.city && profile.governorate ? `${profile.city}, ${profile.governorate}` : (profile.location || t('locationNotSet'))}
       </p>
 
       {/* Stats Pill */}

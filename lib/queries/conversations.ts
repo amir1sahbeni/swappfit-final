@@ -10,10 +10,10 @@ export async function getUserConversations(): Promise<Conversation[]> {
   const { data, error } = await supabase
     .from('conversations')
     .select(`
-      *,
-      listing:listing_id(*),
-      partner:profiles!participant_a(*),
-      partner2:profiles!participant_b(*),
+      id, participant_a, participant_b, listing_id, last_message, last_message_at, created_at,
+      listing:listing_id(id, name, image, status),
+      partner:profiles!participant_a(id, name, handle, avatar_url, is_premium, location_sharing_enabled, precise_lat, precise_lng, governorate, city),
+      partner2:profiles!participant_b(id, name, handle, avatar_url, is_premium, location_sharing_enabled, precise_lat, precise_lng, governorate, city),
       messages!inner(
         id,
         sender_id,
@@ -83,7 +83,7 @@ export async function getConversationMessages(conversationId: string): Promise<M
   const supabase = await createServerClient()
   const { data, error } = await supabase
     .from('messages')
-    .select('*')
+    .select('id, conversation_id, sender_id, receiver_id, text, message_type, media_url, reply_to_id, read_at, created_at, deleted_at, deleted_for')
     .eq('conversation_id', conversationId)
     .order('created_at', { ascending: true })
 
@@ -98,7 +98,7 @@ export async function getConversationWithUser(otherUserId: string): Promise<Conv
 
   const { data, error } = await supabase
     .from('conversations')
-    .select('*')
+    .select('id, participant_a, participant_b, listing_id, last_message, last_message_at, created_at')
     .or(`and(participant_a.eq.${user.id},participant_b.eq.${otherUserId}),and(participant_a.eq.${otherUserId},participant_b.eq.${user.id})`)
     .order('last_message_at', { ascending: false })
     .limit(1)

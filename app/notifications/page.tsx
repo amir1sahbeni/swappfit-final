@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
+import Image from "next/image"
 import { Bell, ArrowRight, MessageCircle, Heart, Star, Repeat, ShoppingBag, CheckCheck } from "lucide-react"
-import { PageHeader } from "@/components/page-header"
 import { BottomNav } from "@/components/bottom-nav"
 import { createClient } from "@/lib/supabase/client"
 import { formatRelativeTime } from "@/lib/utils"
@@ -148,19 +148,22 @@ export default function NotificationsPage() {
   const hasUnread = notifications.some(n => !n.read)
 
   return (
-    <main className="mx-auto w-full max-w-[390px] min-h-dvh px-5 pb-28 pt-2">
-      <div className="flex items-center justify-between mb-4">
-        <PageHeader title={t('title')} subtitle={t('subtitle')} />
+    <main className="mx-auto w-full max-w-[390px] min-h-dvh px-5 pb-28">
+      <header className="flex items-start justify-between bg-background pb-4" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 20px)' }}>
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">{t('title')}</h1>
+          <p className="mt-0.5 text-xs text-muted-foreground">{t('subtitle')}</p>
+        </div>
         {hasUnread && (
           <button 
             onClick={handleMarkAllRead}
-            className="flex items-center gap-1.5 text-xs font-medium text-primary hover:text-primary/80 transition-colors"
+            className="flex items-center gap-1.5 mt-1 rounded-full bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary hover:bg-primary/20 transition-colors"
           >
             <CheckCheck className="h-4 w-4" />
             {t('markAllRead')}
           </button>
         )}
-      </div>
+      </header>
 
       <div className="flex flex-col gap-3 mt-4">
         {notifications.length === 0 ? (
@@ -183,10 +186,12 @@ export default function NotificationsPage() {
               }`}
             >
               <div className="relative shrink-0 mt-0.5">
-                <img
+                <Image
                   src={notif.actor?.avatar_url || "/placeholder.svg"}
                   alt={notif.actor?.name || 'User'}
-                  className="h-11 w-11 rounded-full object-cover shadow-sm ring-1 ring-border/50"
+                  width={44}
+                  height={44}
+                  className="rounded-full object-cover shadow-sm ring-1 ring-border/50"
                 />
                 <div className={`absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full shadow-sm ring-2 ring-background ${getIconBg(notif.type)}`}>
                   {getIcon(notif.type)}

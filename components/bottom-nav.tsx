@@ -170,7 +170,7 @@ export function BottomNav() {
   ]
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-50 bg-card shadow-[0_-8px_30px_rgba(15,23,42,0.08)]">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm border-t border-border">
       <div className="mx-auto flex max-w-[390px] items-center justify-around px-4 py-2 pb-[calc(env(safe-area-inset-bottom,8px)+6px)]">
         {tabs.map(({ key, label, icon: Icon, href, center }) => {
           const active = href === "/" ? pathname === "/" : pathname.startsWith(href)

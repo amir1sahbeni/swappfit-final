@@ -7,7 +7,7 @@ export async function getPurchaseById(id: string): Promise<Purchase | null> {
   // Fetch purchase with items first
   const { data: purchase, error: purchaseError } = await supabase
     .from('purchases')
-    .select('*, purchase_items(*)')
+    .select('id, buyer_id, seller_id, status, amount, delivery_fee, subtotal, delivery_address, created_at, updated_at, purchase_items(id, purchase_id, item_id, price)')
     .eq('id', id)
     .single()
 
@@ -22,7 +22,7 @@ export async function getPurchaseById(id: string): Promise<Purchase | null> {
   if (itemIds.length > 0) {
     const { data: listings } = await supabase
       .from('listings')
-      .select('*')
+      .select('id, seller_id, name, brand, size, description, price, images, category, condition, status, created_at, updated_at, featured_until, listing_lat, listing_lng, size_type, gender')
       .in('id', itemIds)
     items = listings || []
   }
@@ -37,13 +37,13 @@ export async function getPurchaseById(id: string): Promise<Purchase | null> {
   // Fetch buyer and seller profiles separately
   const { data: buyer } = await supabase
     .from('profiles')
-    .select('*')
+    .select('id, name, handle, avatar_url, bio, location, rating, review_count, swap_count, saved_listings, created_at, updated_at, fcm_token, is_premium, precise_lat, precise_lng, location_sharing_enabled, governorate, city, agreed_to_terms_at, terms_version')
     .eq('id', purchase.buyer_id)
     .single()
 
   const { data: seller } = await supabase
     .from('profiles')
-    .select('*')
+    .select('id, name, handle, avatar_url, bio, location, rating, review_count, swap_count, saved_listings, created_at, updated_at, fcm_token, is_premium, precise_lat, precise_lng, location_sharing_enabled, governorate, city, agreed_to_terms_at, terms_version')
     .eq('id', purchase.seller_id)
     .single()
 
@@ -62,10 +62,10 @@ export async function getUserPurchases(userId: string): Promise<Purchase[]> {
   const { data: purchases, error } = await supabase
     .from('purchases')
     .select(`
-      *,
+      id, buyer_id, seller_id, status, amount, delivery_fee, subtotal, delivery_address, created_at, updated_at,
       purchase_items(
-        *,
-        item:listings(*)
+        id, purchase_id, item_id, price,
+        item:listings(id, seller_id, name, brand, size, description, price, images, category, condition, status, created_at, updated_at, featured_until, listing_lat, listing_lng, size_type, gender)
       )
     `)
     .or(`buyer_id.eq.${userId},seller_id.eq.${userId}`)
@@ -82,7 +82,7 @@ export async function getUserPurchases(userId: string): Promise<Purchase[]> {
   
   const { data: profiles } = await supabase
     .from('profiles')
-    .select('*')
+    .select('id, name, handle, avatar_url, bio, location, rating, review_count, swap_count, saved_listings, created_at, updated_at, fcm_token, is_premium, precise_lat, precise_lng, location_sharing_enabled, governorate, city, agreed_to_terms_at, terms_version')
     .in('id', Array.from(userIds))
   
   const profileMap = new Map(profiles?.map(p => [p.id, p]) || [])

@@ -1,4 +1,16 @@
 {
+  "UserProfile": {
+    "title": "الملف الشخصي",
+    "noBio": "لا توجد سيرة ذاتية بعد.",
+    "locationNotSet": "الموقع غير محدد",
+    "followers": "المتابعون",
+    "following": "المتابَعون",
+    "swaps": "التبادلات",
+    "rating": "التقييم",
+    "message": "رسالة",
+    "closet": "الخزانة",
+    "noActiveItems": "هذا المستخدم ليس لديه عناصر نشطة."
+  },
   "Home": {
     "title": "SwappFit",
     "subtitle": "تبادلات مميزة قريبة منك",
@@ -34,7 +46,9 @@
     "noFollowers": "ليس لديك متابعين بعد.",
     "noFollowing": "أنت لا تتابع أحداً بعد.",
     "mySwaps": "تبادلاتي",
-    "mySwapsSubtitle": "عرض اقتراحاتك الواردة والصادرة"
+    "mySwapsSubtitle": "عرض اقتراحاتك الواردة والصادرة",
+    "favourites": "المفضلة",
+    "favouritesSubtitle": "عرض العناصر المحفوظة الخاصة بك"
   },
   "ProfileCard": {
     "followers": "المتابعون",
@@ -105,6 +119,8 @@
     "category": "الفئة",
     "condition": "الحالة",
     "description": "الوصف",
+    "optimizingImage": "جاري تحسين الصورة...",
+    "uploading": "جاري الرفع...",
     "publishing": "جاري النشر...",
     "publishListing": "نشر الإعلان",
     "dailyLimitReached": "تم الوصول إلى الحد اليومي",
@@ -149,7 +165,11 @@
     "enterEmailFirst": "أدخل بريدك الإلكتروني أولاً",
     "passwordResetSent": "تم إرسال إيميل إعادة تعيين كلمة المرور. يرجى التحقق من صندوق الوارد.",
     "swapPremiumFashion": "بادل الأزياء المميزة مع أشخاص قريبين منك.",
-    "signInToCreate": "سجّل الدخول لإنشاء إعلان"
+    "signInToCreate": "سجّل الدخول لإنشاء إعلان",
+    "agreeToTerms": "أوافق على <termsLink>الشروط والأحكام</termsLink> و<privacyLink>سياسة الخصوصية</privacyLink>",
+    "termsAndConditions": "الشروط والأحكام",
+    "privacyPolicy": "سياسة الخصوصية",
+    "mustAgreeToTerms": "يجب قبول الشروط والأحكام للتسجيل"
   },
   "Search": {
     "title": "بحث",
@@ -218,7 +238,12 @@
     "deleteListingConfirm": "هذا الإجراء لا يمكن التراجع عنه",
     "size": "المقاس",
     "buy": "شراء",
-    "failedToBuy": "فشل الشراء"
+    "failedToBuy": "فشل الشراء",
+    "pinchToZoom": "قرص للتكبير"
+  },
+  "Favourites": {
+    "title": "المفضلة",
+    "noFavourites": "ليس لديك عناصر مفضلة بعد."
   },
   "ItemCard": {
     "premium": "بريميوم",
@@ -298,9 +323,11 @@
     "name": "الاسم",
     "location": "الموقع",
     "bio": "السيرة الذاتية",
-    "placeholderLocation": "مثال: تونس، تونس",
-    "placeholderBio": "أخبر المتبادلين عن نفسك...",
+    "placeholderLocation": "مثال: تونس، العاصمة",
+    "placeholderBio": "أخبر الأعضاء عن نفسك...",
     "failedToUpdate": "فشل في تحديث الملف الشخصي",
+    "optimizingImage": "جاري تحسين الصورة...",
+    "uploading": "جاري الرفع...",
     "saving": "جاري الحفظ...",
     "saveChanges": "حفظ التغييرات"
   },

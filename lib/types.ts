@@ -28,6 +28,7 @@ export interface Profile {
   location_sharing_enabled: boolean
   precise_lat: number | null
   precise_lng: number | null
+  favourites?: string[]
 }
 
 export interface Listing {
@@ -36,6 +37,7 @@ export interface Listing {
   name: string
   brand: string
   size: string
+  description?: string
   /** Stored in cents, e.g. 12800 = $128 */
   price: number
   category: string
@@ -44,6 +46,7 @@ export interface Listing {
   size_type?: string
   gender?: string
   status: ListingStatus
+  featured_until?: string | null
   created_at: string
   updated_at: string
   listing_lat: number | null
@@ -189,6 +192,7 @@ export interface Item {
   distance: string
   postedAt: string
   status?: string
+  isFeatured?: boolean
   listing_lat: number | null
   listing_lng: number | null
   seller_city: string | undefined

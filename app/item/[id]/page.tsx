@@ -5,6 +5,8 @@ import { listingToItem, profileToSeller } from "@/lib/utils"
 import { ItemDetailView } from "./item-detail-view"
 import { createServerClient } from "@/lib/supabase/server"
 
+export const revalidate = 30
+
 export default async function ItemDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
 
@@ -27,8 +29,8 @@ export default async function ItemDetailPage({ params }: { params: Promise<{ id:
   if (user) {
     if (user.id === listing.seller_id) isOwner = true
 
-    const { data: myProfile } = await supabase.from('profiles').select('saved_listings').eq('id', user.id).single()
-    if (myProfile?.saved_listings?.includes(listing.id)) {
+    const { data: fav } = await supabase.from('favourites').select('id').eq('user_id', user.id).eq('listing_id', listing.id).single()
+    if (fav) {
       isSaved = true
     }
   }

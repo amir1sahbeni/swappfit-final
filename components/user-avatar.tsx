@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
+import Image from "next/image"
 
 interface UserAvatarProps {
   id: string
@@ -42,9 +43,11 @@ export function UserAvatar({ id, name, avatarUrl, hasNewListing, className = "h-
       onClick={handleClick}
       className={`shrink-0 block rounded-full cursor-pointer ${className} ${showRing ? "bg-brand-gradient p-[2px]" : ""}`}
     >
-      <img
+      <Image
         src={avatarUrl || "/placeholder.svg"}
         alt={name}
+        width={56}
+        height={56}
         className={`h-full w-full rounded-full object-cover ${showRing ? "border-[2.5px] border-background" : ""}`}
       />
     </div>

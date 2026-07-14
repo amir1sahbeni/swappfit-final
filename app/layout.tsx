@@ -40,7 +40,7 @@ export const metadata: Metadata = {
 import { AppProvider } from '@/components/app-context'
 import { NextIntlClientProvider } from 'next-intl'
 import { getMessages, getLocale } from 'next-intl/server'
-import { ClientWrapper } from '@/components/client-wrapper'
+import { SwipeHandler } from '@/components/swipe-handler'
 
 export default async function RootLayout({
   children,
@@ -56,9 +56,10 @@ export default async function RootLayout({
         <NextIntlClientProvider messages={messages}>
           <ThemeProvider>
             <AppProvider>
-              <ClientWrapper>
+              <SwipeHandler />
+              <div className="pb-20">
                 {children}
-              </ClientWrapper>
+              </div>
               {process.env.NODE_ENV === 'production' && <Analytics />}
             </AppProvider>
           </ThemeProvider>

@@ -6,7 +6,8 @@ import { ChevronLeft, Send, Loader2, Reply, Smile, Trash2, Copy, AlertTriangle, 
 import type { Profile, Message } from "@/lib/types"
 import { createClient } from "@/lib/supabase/client"
 import { UserAvatar } from "@/components/user-avatar"
-import { formatMessageTime, compressImage, storageUrl, getTimeAgo } from "@/lib/utils"
+import { formatMessageTime, storageUrl, getTimeAgo } from "@/lib/utils"
+import { compressImage } from "@/lib/utils/compressImage"
 import { sendPushNotification } from "@/lib/push-notifications"
 import { useTranslations } from 'next-intl'
 
@@ -232,7 +233,7 @@ export function ChatView({
 
     setIsUploading(true)
     try {
-      const compressed = await compressImage(file, 1200)
+      const compressed = await compressImage(file, 1000, 1000, 0.7)
       const fileName = `${currentUserId}_${Date.now()}.jpg`
       const { error: uploadErr } = await supabase.storage.from('chat-media').upload(fileName, compressed)
       if (uploadErr) throw uploadErr

@@ -1,4 +1,16 @@
 {
+  "UserProfile": {
+    "title": "Profil",
+    "noBio": "Pas de bio.",
+    "locationNotSet": "Emplacement non défini",
+    "followers": "Abonnés",
+    "following": "Abonnements",
+    "swaps": "Échanges",
+    "rating": "Note",
+    "message": "Message",
+    "closet": "Dressing",
+    "noActiveItems": "Cet utilisateur n'a pas d'articles actifs."
+  },
   "Home": {
     "title": "SwappFit",
     "subtitle": "Des échanges premium près de chez toi",
@@ -34,7 +46,9 @@
     "noFollowers": "Tu n'as pas encore d'abonnés.",
     "noFollowing": "Tu ne suis encore personne.",
     "mySwaps": "Mes échanges",
-    "mySwapsSubtitle": "Voir tes propositions entrantes et sortantes"
+    "mySwapsSubtitle": "Voir tes propositions entrantes et sortantes",
+    "favourites": "Favoris",
+    "favouritesSubtitle": "Voir tes articles sauvegardés"
   },
   "ProfileCard": {
     "followers": "Abonnés",
@@ -105,7 +119,9 @@
     "category": "Catégorie",
     "condition": "État",
     "description": "Description",
-    "publishing": "Publication...",
+    "optimizingImage": "Optimisation de l'image...",
+    "uploading": "Téléchargement en cours...",
+    "publishing": "Publication en cours...",
     "publishListing": "Publier l'annonce",
     "dailyLimitReached": "Limite quotidienne atteinte",
     "dailyLimitDesc": "Les utilisateurs gratuits peuvent créer seulement 5 annonces par jour. Passe à Premium pour des annonces illimitées !",
@@ -149,7 +165,11 @@
     "enterEmailFirst": "Entre ton email d'abord",
     "passwordResetSent": "Email de réinitialisation envoyé. Vérifie ta boîte de réception.",
     "swapPremiumFashion": "Échange de mode premium avec des gens près de chez toi.",
-    "signInToCreate": "Connecte-toi pour créer une annonce"
+    "signInToCreate": "Connecte-toi pour créer une annonce",
+    "agreeToTerms": "J'accepte les <termsLink>Conditions Générales d'Utilisation</termsLink> et la <privacyLink>Politique de Confidentialité</privacyLink>",
+    "termsAndConditions": "Conditions Générales d'Utilisation",
+    "privacyPolicy": "Politique de Confidentialité",
+    "mustAgreeToTerms": "Tu dois accepter les Conditions Générales pour t'inscrire"
   },
   "Search": {
     "title": "Recherche",
@@ -218,7 +238,12 @@
     "deleteListingConfirm": "Cette action est irréversible",
     "size": "Taille",
     "buy": "Acheter",
-    "failedToBuy": "Échec de l'achat"
+    "failedToBuy": "Échec de l'achat",
+    "pinchToZoom": "Pincez pour zoomer"
+  },
+  "Favourites": {
+    "title": "Favoris",
+    "noFavourites": "Vous n'avez pas encore d'articles favoris."
   },
   "ItemCard": {
     "premium": "Premium",
@@ -298,10 +323,12 @@
     "name": "Nom",
     "location": "Emplacement",
     "bio": "Bio",
-    "placeholderLocation": "ex: Paris, France",
-    "placeholderBio": "Parle aux swappers de toi...",
+    "placeholderLocation": "ex. Paris, Île-de-France",
+    "placeholderBio": "Parlez de vous aux autres utilisateurs...",
     "failedToUpdate": "Échec de la mise à jour du profil",
-    "saving": "Enregistrement...",
+    "optimizingImage": "Optimisation de l'image...",
+    "uploading": "Téléchargement en cours...",
+    "saving": "Enregistrement en cours...",
     "saveChanges": "Enregistrer les modifications"
   },
   "Propose": {

@@ -10,6 +10,7 @@ import { createClient } from "@/lib/supabase/client"
 import { useAppContext } from "@/components/app-context"
 import { AlertCircle, PlayCircle } from "lucide-react"
 import { useTranslations } from 'next-intl'
+import { compressImage } from "@/lib/utils/compressImage"
 
 const MAX_PHOTOS = 5
 const conditions = ["New", "Like New", "Excellent", "Good", "Fair"]
@@ -32,6 +33,8 @@ export default function CreateListingPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState("")
   const [photoError, setPhotoError] = useState("")
+  const [locationSharingEnabled, setLocationSharingEnabled] = useState(false)
+  const [submitStatus, setSubmitStatus] = useState<'idle' | 'compressing' | 'uploading' | 'publishing'>('idle')
 
   const { incrementListingsCreated } = useAppContext()
   
@@ -44,6 +47,11 @@ export default function CreateListingPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) {
         router.replace('/auth?redirect=/create')
+      } else {
+        const { data: profile } = await supabase.from('profiles').select('location_sharing_enabled').eq('id', user.id).single()
+        if (profile?.location_sharing_enabled) {
+          setLocationSharingEnabled(true)
+        }
       }
     }
     checkAuth()
@@ -99,6 +107,7 @@ export default function CreateListingPage() {
 
   const executeSubmit = async () => {
     setIsSubmitting(true)
+    setSubmitStatus('compressing')
     setError("")
 
     try {
@@ -106,12 +115,15 @@ export default function CreateListingPage() {
       const uploadedUrls: string[] = []
       
       for (const file of files) {
-        const fileExt = file.name.split('.').pop()
+        const compressedFile = await compressImage(file, 1200, 1200, 0.75)
+        setSubmitStatus('uploading')
+
+        const fileExt = compressedFile.name.split('.').pop()
         const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`
         
         const { data, error: uploadError } = await supabase.storage
           .from('item-images')
-          .upload(fileName, file, { cacheControl: '3600', upsert: false })
+          .upload(fileName, compressedFile, { cacheControl: '3600', upsert: false })
           
         if (uploadError) throw uploadError
         
@@ -122,7 +134,24 @@ export default function CreateListingPage() {
         uploadedUrls.push(publicUrlData.publicUrl)
       }
 
-      // 2. Create listing
+      // 2. Get live location if enabled
+      let lat: number | null = null
+      let lng: number | null = null
+      
+      if (locationSharingEnabled && navigator.geolocation) {
+        try {
+          const pos = await new Promise<GeolocationPosition>((resolve, reject) => {
+            navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 5000, maximumAge: 60000 })
+          })
+          lat = pos.coords.latitude
+          lng = pos.coords.longitude
+        } catch (e) {
+          console.warn("Could not get live location, falling back to profile coords", e)
+        }
+      }
+
+      // 3. Create listing
+      setSubmitStatus('publishing')
       const sizeType = (category === "Trousers" || category === "Bottoms") 
           ? "mixed"
           : (category === "Shoes" ? "numeric" : "letter")
@@ -137,12 +166,15 @@ export default function CreateListingPage() {
         condition,
         images: uploadedUrls,
         size_type: sizeType,
-        gender: undefined
+        gender: undefined,
+        lat,
+        lng
       })
       incrementListingsCreated()
       router.replace('/')
     } catch (err: any) {
       setIsSubmitting(false)
+      setSubmitStatus('idle')
     }
   }
 
@@ -296,7 +328,9 @@ export default function CreateListingPage() {
           {isSubmitting ? (
             <>
               <Loader2 className="h-4 w-4 animate-spin" />
-              {t('publishing')}
+              {submitStatus === 'compressing' ? t('optimizingImage', { fallback: 'Optimizing image...' }) : 
+               submitStatus === 'uploading' ? t('uploading', { fallback: 'Uploading...' }) : 
+               t('publishing', { fallback: 'Publishing...' })}
             </>
           ) : (
             <>

@@ -1,4 +1,16 @@
 {
+  "UserProfile": {
+    "title": "Profile",
+    "noBio": "No bio yet.",
+    "locationNotSet": "Location not set",
+    "followers": "Followers",
+    "following": "Following",
+    "swaps": "Swaps",
+    "rating": "Rating",
+    "message": "Message",
+    "closet": "Closet",
+    "noActiveItems": "This user has no active items."
+  },
   "Home": {
     "title": "SwappFit",
     "subtitle": "Premium swaps near you",
@@ -34,7 +46,9 @@
     "noFollowers": "You have no followers yet.",
     "noFollowing": "You aren't following anyone yet.",
     "mySwaps": "My Swaps",
-    "mySwapsSubtitle": "View your incoming and outgoing proposals"
+    "mySwapsSubtitle": "View your incoming and outgoing proposals",
+    "favourites": "Favourites",
+    "favouritesSubtitle": "View your saved items"
   },
   "ProfileCard": {
     "followers": "Followers",
@@ -105,6 +119,8 @@
     "category": "Category",
     "condition": "Condition",
     "description": "Description",
+    "optimizingImage": "Optimizing image...",
+    "uploading": "Uploading...",
     "publishing": "Publishing...",
     "publishListing": "Publish Listing",
     "dailyLimitReached": "Daily Limit Reached",
@@ -149,7 +165,11 @@
     "enterEmailFirst": "Please enter your email first",
     "passwordResetSent": "Password reset email sent. Please check your inbox.",
     "swapPremiumFashion": "Swap premium fashion with people near you.",
-    "signInToCreate": "Sign in to create a listing"
+    "signInToCreate": "Sign in to create a listing",
+    "agreeToTerms": "I agree to the <termsLink>Terms & Conditions</termsLink> and <privacyLink>Privacy Policy</privacyLink>",
+    "termsAndConditions": "Terms & Conditions",
+    "privacyPolicy": "Privacy Policy",
+    "mustAgreeToTerms": "You must agree to the Terms & Conditions to sign up"
   },
   "Search": {
     "title": "Search",
@@ -218,7 +238,12 @@
     "deleteListingConfirm": "This action cannot be undone",
     "size": "Size",
     "buy": "Buy",
-    "failedToBuy": "Failed to buy"
+    "failedToBuy": "Failed to buy",
+    "pinchToZoom": "Pinch to zoom"
+  },
+  "Favourites": {
+    "title": "Favourites",
+    "noFavourites": "You have no favourite items yet."
   },
   "ItemCard": {
     "premium": "Premium",
@@ -301,6 +326,8 @@
     "placeholderLocation": "e.g. New York, NY",
     "placeholderBio": "Tell swappers about yourself...",
     "failedToUpdate": "Failed to update profile",
+    "optimizingImage": "Optimizing image...",
+    "uploading": "Uploading...",
     "saving": "Saving...",
     "saveChanges": "Save Changes"
   },

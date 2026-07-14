@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { removeSwapProposal, removePurchaseFromHistory } from '@/app/actions/swaps'
 import { useTranslations } from 'next-intl'
@@ -60,10 +61,12 @@ export function SwapsList({ history, userId }: { history: any[], userId: string 
                 href={`/exchange/${proposal.id}`}
                 className="flex-1 flex items-center gap-4 rounded-3xl bg-card p-4 shadow-[0_2px_10px_rgba(0,0,0,0.03)] transition-transform active:scale-[0.98] border border-border"
               >
-                <img
+                <Image
                   src={partner?.avatar_url || '/placeholder.svg'}
                   alt={partner?.name || t('user')}
-                  className="h-12 w-12 rounded-full object-cover border border-border"
+                  width={48}
+                  height={48}
+                  className="rounded-full object-cover border border-border"
                 />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-bold text-foreground truncate">{partner?.name}</p>
@@ -105,10 +108,12 @@ export function SwapsList({ history, userId }: { history: any[], userId: string 
                 href={`/purchase/${purchase.id}`}
                 className="flex-1 flex items-center gap-4 rounded-3xl bg-card p-4 shadow-[0_2px_10px_rgba(0,0,0,0.03)] transition-transform active:scale-[0.98] border border-border"
               >
-                <img
+                <Image
                   src={partner?.avatar_url || '/placeholder.svg'}
                   alt={partner?.name || t('user')}
-                  className="h-12 w-12 rounded-full object-cover border border-border"
+                  width={48}
+                  height={48}
+                  className="rounded-full object-cover border border-border"
                 />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-bold text-foreground truncate">{partner?.name}</p>
