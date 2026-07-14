@@ -22,7 +22,7 @@ export async function getPurchaseById(id: string): Promise<Purchase | null> {
   if (itemIds.length > 0) {
     const { data: listings } = await supabase
       .from('listings')
-      .select('id, seller_id, name, brand, size, description, price, images, category, condition, status, created_at, updated_at, featured_until, listing_lat, listing_lng, size_type, gender')
+      .select('id, seller_id, name, brand, size, description, price, images, category, condition, status, created_at, updated_at, listing_lat, listing_lng, size_type, gender')
       .in('id', itemIds)
     items = listings || []
   }
@@ -65,7 +65,7 @@ export async function getUserPurchases(userId: string): Promise<Purchase[]> {
       id, buyer_id, seller_id, status, amount, delivery_fee, subtotal, delivery_address, created_at, updated_at,
       purchase_items(
         id, purchase_id, item_id, price,
-        item:listings(id, seller_id, name, brand, size, description, price, images, category, condition, status, created_at, updated_at, featured_until, listing_lat, listing_lng, size_type, gender)
+        item:listings(id, seller_id, name, brand, size, description, price, images, category, condition, status, created_at, updated_at, listing_lat, listing_lng, size_type, gender)
       )
     `)
     .or(`buyer_id.eq.${userId},seller_id.eq.${userId}`)
