@@ -101,7 +101,7 @@ export async function getListingById(id: string): Promise<Listing | null> {
     .from('listings')
     .select(`
       id, seller_id, name, brand, size, description, price, images, category, condition, status, created_at, updated_at, featured_until, listing_lat, listing_lng, size_type, gender,
-      profiles ( id, name, handle, avatar_url, is_premium, location, governorate, city, location_sharing_enabled, precise_lat, precise_lng )
+      profiles ( id, name, handle, avatar_url, location, governorate, city, location_sharing_enabled, precise_lat, precise_lng )
     `)
     .eq('id', id)
     .single()
@@ -116,7 +116,7 @@ export async function getUserListings(userId: string): Promise<Listing[]> {
     .from('listings')
     .select(`
       id, seller_id, name, brand, size, description, price, images, category, condition, status, created_at, updated_at, featured_until, listing_lat, listing_lng, size_type, gender,
-      profiles ( id, name, handle, avatar_url, is_premium, location, governorate, city, location_sharing_enabled, precise_lat, precise_lng )
+      profiles ( id, name, handle, avatar_url, location, governorate, city, location_sharing_enabled, precise_lat, precise_lng )
     `)
     .eq('seller_id', userId)
     .eq('status', 'active')
@@ -133,7 +133,7 @@ export async function getOwnerListings(userId: string): Promise<Listing[]> {
     .from('listings')
     .select(`
       id, seller_id, name, brand, size, description, price, images, category, condition, status, created_at, updated_at, featured_until, listing_lat, listing_lng, size_type, gender,
-      profiles ( id, name, handle, avatar_url, is_premium, location, governorate, city, location_sharing_enabled, precise_lat, precise_lng )
+      profiles ( id, name, handle, avatar_url, location, governorate, city, location_sharing_enabled, precise_lat, precise_lng )
     `)
     .eq('seller_id', userId)
     .in('status', ['active', 'swapped'])
@@ -150,7 +150,7 @@ export async function searchListings(query: string): Promise<Listing[]> {
     .from('listings')
     .select(`
       id, seller_id, name, brand, size, description, price, images, category, condition, status, created_at, updated_at, featured_until, listing_lat, listing_lng, size_type, gender,
-      profiles ( id, name, handle, avatar_url, is_premium, location, governorate, city, location_sharing_enabled, precise_lat, precise_lng )
+      profiles ( id, name, handle, avatar_url, location, governorate, city, location_sharing_enabled, precise_lat, precise_lng )
     `)
     .eq('status', 'active')
     .or(`name.ilike.%${query}%,brand.ilike.%${query}%`)

@@ -12,8 +12,8 @@ export async function getUserConversations(): Promise<Conversation[]> {
     .select(`
       id, participant_a, participant_b, listing_id, last_message, last_message_at, created_at,
       listing:listing_id(id, name, image, status),
-      partner:profiles!participant_a(id, name, handle, avatar_url, is_premium, location_sharing_enabled, precise_lat, precise_lng, governorate, city),
-      partner2:profiles!participant_b(id, name, handle, avatar_url, is_premium, location_sharing_enabled, precise_lat, precise_lng, governorate, city),
+      partner:profiles!participant_a(id, name, handle, avatar_url, location_sharing_enabled, precise_lat, precise_lng, governorate, city),
+      partner2:profiles!participant_b(id, name, handle, avatar_url, location_sharing_enabled, precise_lat, precise_lng, governorate, city),
       messages!inner(
         id,
         sender_id,

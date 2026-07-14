@@ -37,13 +37,13 @@ export async function getPurchaseById(id: string): Promise<Purchase | null> {
   // Fetch buyer and seller profiles separately
   const { data: buyer } = await supabase
     .from('profiles')
-    .select('id, name, handle, avatar_url, bio, location, rating, review_count, swap_count, saved_listings, created_at, updated_at, fcm_token, is_premium, precise_lat, precise_lng, location_sharing_enabled, governorate, city, agreed_to_terms_at, terms_version')
+    .select('id, name, handle, avatar_url, bio, location, rating, review_count, swap_count, saved_listings, created_at, updated_at, precise_lat, precise_lng, location_sharing_enabled, governorate, city, agreed_to_terms_at, terms_version')
     .eq('id', purchase.buyer_id)
     .single()
 
   const { data: seller } = await supabase
     .from('profiles')
-    .select('id, name, handle, avatar_url, bio, location, rating, review_count, swap_count, saved_listings, created_at, updated_at, fcm_token, is_premium, precise_lat, precise_lng, location_sharing_enabled, governorate, city, agreed_to_terms_at, terms_version')
+    .select('id, name, handle, avatar_url, bio, location, rating, review_count, swap_count, saved_listings, created_at, updated_at, precise_lat, precise_lng, location_sharing_enabled, governorate, city, agreed_to_terms_at, terms_version')
     .eq('id', purchase.seller_id)
     .single()
 
@@ -82,7 +82,7 @@ export async function getUserPurchases(userId: string): Promise<Purchase[]> {
   
   const { data: profiles } = await supabase
     .from('profiles')
-    .select('id, name, handle, avatar_url, bio, location, rating, review_count, swap_count, saved_listings, created_at, updated_at, fcm_token, is_premium, precise_lat, precise_lng, location_sharing_enabled, governorate, city, agreed_to_terms_at, terms_version')
+    .select('id, name, handle, avatar_url, bio, location, rating, review_count, swap_count, saved_listings, created_at, updated_at, precise_lat, precise_lng, location_sharing_enabled, governorate, city, agreed_to_terms_at, terms_version')
     .in('id', Array.from(userIds))
   
   const profileMap = new Map(profiles?.map(p => [p.id, p]) || [])

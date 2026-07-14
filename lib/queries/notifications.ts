@@ -10,7 +10,7 @@ export async function getUserNotifications(): Promise<Notification[]> {
     .from('notifications')
     .select(`
       id, user_id, actor_id, type, entity_id, read, created_at,
-      actor:profiles!actor_id(id, name, handle, avatar_url, is_premium)
+      actor:profiles!actor_id(id, name, handle, avatar_url)
     `)
     .eq('user_id', user.id)
     .order('created_at', { ascending: false })

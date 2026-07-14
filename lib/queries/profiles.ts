@@ -5,7 +5,7 @@ export async function getProfile(userId: string): Promise<Profile | null> {
   const supabase = await createServerClient()
   const { data, error } = await supabase
     .from('profiles')
-    .select('id, name, handle, avatar_url, bio, location, rating, review_count, swap_count, saved_listings, created_at, updated_at, fcm_token, is_premium, precise_lat, precise_lng, location_sharing_enabled, governorate, city, agreed_to_terms_at, terms_version')
+    .select('id, name, handle, avatar_url, bio, location, rating, review_count, swap_count, saved_listings, created_at, updated_at, precise_lat, precise_lng, location_sharing_enabled, governorate, city, agreed_to_terms_at, terms_version')
     .eq('id', userId)
     .single()
 
@@ -32,7 +32,7 @@ export async function getCurrentUserProfile(): Promise<Profile | null> {
         name: user.user_metadata?.name || user.email?.split('@')[0] || 'User',
         handle: finalHandle,
       })
-      .select('id, name, handle, avatar_url, bio, location, rating, review_count, swap_count, saved_listings, created_at, updated_at, fcm_token, is_premium, precise_lat, precise_lng, location_sharing_enabled, governorate, city, agreed_to_terms_at, terms_version')
+      .select('id, name, handle, avatar_url, bio, location, rating, review_count, swap_count, saved_listings, created_at, updated_at, precise_lat, precise_lng, location_sharing_enabled, governorate, city, agreed_to_terms_at, terms_version')
       .single()
       
     if (!error && newProfile) {
@@ -58,7 +58,7 @@ export async function searchUsers(query: string): Promise<Profile[]> {
   // Search by handle (username) or name (display name), case insensitive, partial match
   const { data, error } = await supabase
     .from('profiles')
-    .select('id, name, handle, avatar_url, bio, location, rating, review_count, swap_count, saved_listings, created_at, updated_at, fcm_token, is_premium, precise_lat, precise_lng, location_sharing_enabled, governorate, city, agreed_to_terms_at, terms_version')
+    .select('id, name, handle, avatar_url, bio, location, rating, review_count, swap_count, saved_listings, created_at, updated_at, precise_lat, precise_lng, location_sharing_enabled, governorate, city, agreed_to_terms_at, terms_version')
     .or(`handle.ilike.%${searchTerm}%,name.ilike.%${searchTerm}%`)
     .order('created_at', { ascending: false })
     .limit(50)
