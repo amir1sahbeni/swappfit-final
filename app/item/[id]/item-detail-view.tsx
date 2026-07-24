@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useTransition, useEffect, useRef } from "react"
+import { useState, useEffect, useRef } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
@@ -16,7 +16,6 @@ export function ItemDetailView({ item, seller, initialSaved, isOwner, currentUse
   const t = useTranslations('ItemDetail')
   const router = useRouter()
   const [saved, setSaved] = useState(initialSaved)
-  const [isPending, startTransition] = useTransition()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [viewerOpen, setViewerOpen] = useState(false)
   const [listingStatus, setListingStatus] = useState(item.status || 'active')
@@ -133,12 +132,17 @@ export function ItemDetailView({ item, seller, initialSaved, isOwner, currentUse
     return () => { channel.unsubscribe() }
   }, [item.id])
 
-  function handleSave() {
+  async function handleSave() {
     const newSaved = !saved
-    setSaved(newSaved)
-    startTransition(() => {
-      toggleFavourite(item.id, newSaved)
-    })
+    setSaved(newSaved) // optimistic update
+    try {
+      await toggleFavourite(item.id, newSaved)
+    } catch (err: any) {
+      // Roll back the optimistic update on failure
+      setSaved(!newSaved)
+      console.error('Failed to toggle favourite:', err?.message || err)
+      alert('Could not update favourite: ' + (err?.message || 'Unknown error'))
+    }
   }
 
   function handleShare() {
