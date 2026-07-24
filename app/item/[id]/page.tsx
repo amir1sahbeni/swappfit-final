@@ -5,7 +5,8 @@ import { listingToItem, profileToSeller } from "@/lib/utils"
 import { ItemDetailView } from "./item-detail-view"
 import { createServerClient } from "@/lib/supabase/server"
 
-export const revalidate = 30
+export const dynamic = 'force-dynamic'
+
 
 export default async function ItemDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params

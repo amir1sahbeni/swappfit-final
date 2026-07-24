@@ -26,7 +26,7 @@ export default async function FavouritesPage() {
       listing_id,
       listings (
         *,
-        profiles!listings_seller_id_fkey(id, name, avatar_url, is_premium, governorate, city, precise_lat, precise_lng)
+        profiles!listings_seller_id_fkey(id, name, avatar_url, governorate, city, precise_lat, precise_lng)
       )
     `)
     .eq('user_id', user.id)
