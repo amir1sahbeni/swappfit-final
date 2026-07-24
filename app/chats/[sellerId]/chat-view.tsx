@@ -342,11 +342,19 @@ export function ChatView({
   const handleReact = async (msgId: string, emoji: string) => {
     const msg = messages.find(m => m.id === msgId)
     if (!msg) return
-    const reactions = msg.reactions || {}
-    reactions[emoji] = (reactions[emoji] || 0) + 1
+    const reactions = { ...(msg.reactions || {}) }
+    
+    // If the user already reacted with this emoji, toggle it off
+    // Otherwise set their reaction to this new emoji (replacing any previous one)
+    if (reactions[currentUserId] === emoji) {
+      delete reactions[currentUserId]
+    } else {
+      reactions[currentUserId] = emoji
+    }
+
     try {
-      await supabase.from('messages').update({ reactions }).eq('id', msgId)
       setMessages(prev => prev.map(m => m.id === msgId ? { ...m, reactions } : m))
+      await supabase.from('messages').update({ reactions }).eq('id', msgId)
     } catch (e) {}
     setActiveMessage(null)
   }
@@ -496,8 +504,17 @@ export function ChatView({
                     )}
                     {msg.reactions && Object.keys(msg.reactions).length > 0 && (
                       <div className="absolute -bottom-3 -right-2 bg-card border border-border rounded-full px-1.5 py-0.5 text-[10px] shadow-sm flex items-center gap-1 z-10 text-foreground">
-                        {Object.entries(msg.reactions).map(([emoji, count]) => (
-                          <span key={emoji}>{emoji} {count as number > 1 ? count as number : ''}</span>
+                        {Object.entries(
+                          Object.entries(msg.reactions).reduce((acc: Record<string, number>, [k, v]) => {
+                            if (typeof v === 'number') {
+                              acc[k] = (acc[k] || 0) + v // Legacy format
+                            } else if (typeof v === 'string') {
+                              acc[v] = (acc[v] || 0) + 1 // New format (k=userId, v=emoji)
+                            }
+                            return acc
+                          }, {})
+                        ).map(([emoji, count]) => (
+                          <span key={emoji}>{emoji} {count > 1 ? count : ''}</span>
                         ))}
                       </div>
                     )}
