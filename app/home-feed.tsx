@@ -78,7 +78,7 @@ export function HomeFeed({ initialItems, followingIds = [], currentUserProfile }
           .from('listings')
           .select(`
             *,
-            profiles(id, name, avatar_url, is_premium, governorate, city, precise_lat, precise_lng)
+            profiles(id, name, avatar_url, governorate, city, precise_lat, precise_lng)
           `)
           .eq('status', 'active')
           .order('created_at', { ascending: false })

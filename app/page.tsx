@@ -6,7 +6,8 @@ import { getFollowing } from "@/lib/queries/follows"
 import { getCurrentUserProfile } from "@/lib/queries/profiles"
 import { RealtimeRefresh } from "@/components/realtime-refresh"
 
-export const revalidate = 60
+export const dynamic = 'force-dynamic'
+
 
 export default async function Page() {
   const listings = await getActiveListings()
