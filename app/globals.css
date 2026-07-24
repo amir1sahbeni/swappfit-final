@@ -138,6 +138,8 @@ body {
   overflow-x: hidden;
   overscroll-behavior-x: none;
   text-rendering: optimizeLegibility;
+  /* Tell iOS we handle horizontal touches — prevents edge swipe from being stolen by browser */
+  touch-action: pan-y;
 }
 
 /* RTL Support */

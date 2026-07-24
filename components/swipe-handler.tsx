@@ -4,7 +4,8 @@ import { useEffect, useState, useRef } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { Loader2 } from 'lucide-react'
 
-// The 4 main pages — fixed index-based carousel
+// The 4 main pages — fixed index-based carousel.
+// Order is LTR-logical. RTL flip is applied at swipe-time.
 const MAIN_TABS = ['/', '/notifications', '/chats', '/profile']
 
 export function SwipeHandler() {
@@ -17,7 +18,7 @@ export function SwipeHandler() {
   const refreshingRef = useRef(false)
   const isNavigatingRef = useRef(false)
 
-  // Unlock whenever the route actually changes
+  // Unlock the swipe lock whenever the URL actually changes
   useEffect(() => {
     isNavigatingRef.current = false
     setIsTransitioning(false)
@@ -31,7 +32,6 @@ export function SwipeHandler() {
     let isPulling = false
     let currentPullY = 0
 
-    // ─── TOUCH START ───────────────────────────────────────────────────────────
     const onTouchStart = (e: TouchEvent) => {
       startX = e.touches[0].clientX
       startY = e.touches[0].clientY
@@ -41,7 +41,6 @@ export function SwipeHandler() {
       currentPullY = 0
     }
 
-    // ─── TOUCH MOVE ────────────────────────────────────────────────────────────
     const onTouchMove = (e: TouchEvent) => {
       const currentX = e.touches[0].clientX
       const currentY = e.touches[0].clientY
@@ -49,7 +48,7 @@ export function SwipeHandler() {
       const diffY = currentY - startY
       const absDiffY = Math.abs(diffY)
 
-      // Lock direction on first meaningful movement
+      // Lock swipe direction on first meaningful movement
       if (isHorizontalSwipe === null) {
         if (diffX > absDiffY && diffX > 10) {
           isHorizontalSwipe = true
@@ -59,21 +58,20 @@ export function SwipeHandler() {
       }
 
       if (isHorizontalSwipe === true) {
-        // Block native browser swipe-back/forward completely on all pages
+        // Kill native browser swipe-to-go-back/forward on ALL pages
         if (e.cancelable) e.preventDefault()
       } else if (isHorizontalSwipe === false && isPulling && diffY > 0) {
-        // Pull-to-refresh
+        // Pull-to-refresh visual feedback
         if (e.cancelable) e.preventDefault()
         currentPullY = Math.min(diffY * 0.4, 100)
         setPullY(currentPullY)
       }
     }
 
-    // ─── TOUCH END ─────────────────────────────────────────────────────────────
     const onTouchEnd = (e: TouchEvent) => {
       const endX = e.changedTouches[0].clientX
       const deltaX = endX - startX
-      const deltaY = (e.changedTouches[0].clientY) - startY
+      const deltaY = e.changedTouches[0].clientY - startY
       const elapsed = Date.now() - startTime
 
       // ── Pull-to-refresh ──
@@ -89,51 +87,60 @@ export function SwipeHandler() {
         }
       }
 
-      // ── Bail-out checks ──
-      if (elapsed > 500) return          // too slow
+      // ── Bail-out guards (checked fresh every time) ──
+      if (elapsed > 500) return           // took too long, probably not a swipe
       if (isHorizontalSwipe === false) return // was a vertical scroll
-      if (Math.abs(deltaX) < 40) return  // too short
-      if (isNavigatingRef.current) return // already navigating
+      if (Math.abs(deltaX) < 40) return   // too short to count
+      if (isNavigatingRef.current) return  // already in flight, ignore
 
-      // ── Determine page type fresh every time ──
+      // ── Determine page type LIVE on every gesture ──
       const isMainPage = MAIN_TABS.includes(pathname)
 
-      // ═══════════════════════════════════════════════
-      // MAIN PAGES — strict index-based carousel
-      // ═══════════════════════════════════════════════
+      // RTL apps (Arabic): the visual tab order is the mirror of LTR.
+      // Home is on the right, Profile is on the left.
+      // So we invert the swipe direction to match what the user sees.
+      const isRTL = document.documentElement.dir === 'rtl'
+
       if (isMainPage) {
+        // ════════════════════════════════════════════
+        // MAIN PAGES — index-based carousel, hard boundaries
+        // ════════════════════════════════════════════
         const currentIndex = MAIN_TABS.indexOf(pathname)
         if (currentIndex === -1) return
 
-        if (deltaX < 0) {
-          // ── Swipe LEFT → go to next tab ──
-          // Hard boundary: if already on last tab, do nothing
+        // goForward = move to higher index (visually: next tab in reading direction)
+        const goForward  = isRTL ? deltaX > 0 : deltaX < 0
+        const goBackward = isRTL ? deltaX < 0 : deltaX > 0
+
+        if (goForward) {
+          // Hard boundary: already at last tab → dead gesture, do nothing
           if (currentIndex >= MAIN_TABS.length - 1) return
           isNavigatingRef.current = true
           setIsTransitioning(true)
-          // Use hard navigation — works even if the chunk was never loaded
-          window.location.href = MAIN_TABS[currentIndex + 1]
+          // replace() instead of href: does NOT add to history, so listings can never come back via native swipe
+          window.location.replace(MAIN_TABS[currentIndex + 1])
 
-        } else if (deltaX > 0) {
-          // ── Swipe RIGHT → go to previous tab ──
-          // Hard boundary: if already on first tab, do nothing
+        } else if (goBackward) {
+          // Hard boundary: already at first tab → dead gesture, do nothing
           if (currentIndex <= 0) return
           isNavigatingRef.current = true
           setIsTransitioning(true)
-          window.location.href = MAIN_TABS[currentIndex - 1]
+          window.location.replace(MAIN_TABS[currentIndex - 1])
         }
 
-      // ═══════════════════════════════════════════════
-      // SECONDARY PAGES — stack-based back only
-      // ═══════════════════════════════════════════════
       } else {
-        // Only swipe LEFT triggers go-back. Swipe right is a completely dead gesture.
-        if (deltaX < -40) {
+        // ════════════════════════════════════════════
+        // SECONDARY PAGES — stack-based back ONLY
+        // Swipe in the "back" direction = pop stack.
+        // Swipe in the "forward" direction = completely dead gesture.
+        // ════════════════════════════════════════════
+        const isBackSwipe = isRTL ? deltaX > 40 : deltaX < -40
+        if (isBackSwipe) {
           isNavigatingRef.current = true
           setIsTransitioning(true)
           router.back()
         }
-        // deltaX > 0 (swipe right) → do absolutely nothing
+        // Any other direction on a secondary page: silently ignored
       }
     }
 
@@ -148,7 +155,7 @@ export function SwipeHandler() {
     }
   }, [pathname, router])
 
-  // ─── VISUAL INDICATOR (pull-to-refresh + page transition spinner) ──────────
+  // ─── Visual spinner: shown during pull-to-refresh AND page transitions ───────
   if (pullY <= 0 && !refreshing && !isTransitioning) return null
 
   return (
