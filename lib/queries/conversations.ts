@@ -14,7 +14,7 @@ export async function getUserConversations(): Promise<Conversation[]> {
       listing:listing_id(id, name, image, status),
       partner:profiles!participant_a(id, name, handle, avatar_url, location_sharing_enabled, precise_lat, precise_lng, governorate, city),
       partner2:profiles!participant_b(id, name, handle, avatar_url, location_sharing_enabled, precise_lat, precise_lng, governorate, city),
-      messages!inner(
+      messages(
         id,
         sender_id,
         text,
@@ -28,7 +28,10 @@ export async function getUserConversations(): Promise<Conversation[]> {
     .or(`participant_a.eq.${user.id},participant_b.eq.${user.id}`)
     .order('last_message_at', { ascending: false })
 
-  if (error) return []
+  if (error) {
+    console.error('[getUserConversations] error:', error.message, error.details)
+    return []
+  }
 
   // Get blocked users to filter out conversations with them
   const blockedUsers = await getBlockedUsers(user.id)
@@ -83,11 +86,14 @@ export async function getConversationMessages(conversationId: string): Promise<M
   const supabase = await createServerClient()
   const { data, error } = await supabase
     .from('messages')
-    .select('id, conversation_id, sender_id, receiver_id, text, message_type, media_url, reply_to_id, read_at, created_at, deleted_at, deleted_for')
+    .select('id, conversation_id, sender_id, text, message_type, media_url, reply_to_message_id, reactions, read_at, created_at, deleted_at, deleted_for')
     .eq('conversation_id', conversationId)
     .order('created_at', { ascending: true })
 
-  if (error) return []
+  if (error) {
+    console.error('[getConversationMessages] error:', error.message, error.details)
+    return []
+  }
   return data as Message[]
 }
 
