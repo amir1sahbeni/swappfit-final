@@ -235,7 +235,9 @@ export function ChatView({
     try {
       const compressed = await compressImage(file, 1000, 1000, 0.7)
       const fileName = `${currentUserId}_${Date.now()}.jpg`
-      const { error: uploadErr } = await supabase.storage.from('chat-media').upload(fileName, compressed)
+      const { error: uploadErr } = await supabase.storage.from('chat-media').upload(fileName, compressed, {
+        contentType: 'image/jpeg',
+      })
       if (uploadErr) throw uploadErr
       
       const mediaUrl = storageUrl('chat-media', fileName)
@@ -299,7 +301,7 @@ export function ChatView({
       })
     } catch (err: any) {
       console.error('handleImageUpload error:', err?.message ?? err, '| code:', err?.code)
-      alert(t('failedToUploadImage'))
+      alert(`${t('failedToUploadImage')}: ${err?.message ?? 'Unknown error'}`)
     } finally {
       setIsUploading(false)
       if (e.target) e.target.value = '' 
@@ -481,7 +483,7 @@ export function ChatView({
 
                   {/* Message bubble */}
                   <div
-                    className={`rounded-2xl text-sm relative overflow-hidden ${
+                    className={`rounded-2xl text-sm relative ${
                       isMine
                         ? "rounded-br-sm bg-brand-gradient text-white shadow-[0_4px_12px_rgba(192,57,91,0.2)]"
                         : "rounded-bl-sm bg-muted text-foreground"
