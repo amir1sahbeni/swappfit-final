@@ -235,12 +235,12 @@ export function ChatView({
     try {
       const compressed = await compressImage(file, 1000, 1000, 0.7)
       const fileName = `${currentUserId}_${Date.now()}.jpg`
-      const { error: uploadErr } = await supabase.storage.from('chat-media').upload(fileName, compressed, {
+      const { error: uploadErr } = await supabase.storage.from('item-images').upload(fileName, compressed, {
         contentType: 'image/jpeg',
       })
       if (uploadErr) throw uploadErr
       
-      const mediaUrl = storageUrl('chat-media', fileName)
+      const mediaUrl = storageUrl('item-images', fileName)
 
       let activeConvId = conversationId
       if (!activeConvId) {
