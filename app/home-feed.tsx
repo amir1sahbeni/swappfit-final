@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef, useCallback } from "react"
+import { useState, useEffect, useCallback } from "react"
 import Link from "next/link"
 import { Search, SlidersHorizontal } from "lucide-react"
 import { BottomNav } from "@/components/bottom-nav"
@@ -11,20 +11,11 @@ import type { Item, Profile } from "@/lib/types"
 import { createClient } from "@/lib/supabase/client"
 import { useTranslations } from "next-intl"
 
-const PULL_THRESHOLD = 80
-
 export function HomeFeed({ initialItems, followingIds = [], currentUserProfile }: { initialItems: Item[], followingIds?: string[], currentUserProfile?: Profile | null }) {
   const t = useTranslations("Home")
   const [activeCategory, setActiveCategory] = useState("All")
   const [showFollowing, setShowFollowing] = useState(false)
   const [items, setItems] = useState<Item[]>(initialItems)
-
-  // Pull-to-refresh state
-  const [pullY, setPullY] = useState(0)
-  const [isRefreshing, setIsRefreshing] = useState(false)
-  const touchStartY = useRef(0)
-  const isPulling = useRef(false)
-  const mainRef = useRef<HTMLDivElement>(null)
 
   // Real-time: remove listings that become sold/swapped/removed
   useEffect(() => {
@@ -103,69 +94,7 @@ export function HomeFeed({ initialItems, followingIds = [], currentUserProfile }
     }
   }, [])
 
-  // Pull-to-refresh touch handlers
-  useEffect(() => {
-    const el = mainRef.current
-    if (!el) return
-
-    const onTouchStart = (e: TouchEvent) => {
-      // Only trigger if page is scrolled to top
-      if (window.scrollY > 5) return
-      touchStartY.current = e.touches[0].clientY
-      isPulling.current = false
-    }
-
-    const onTouchMove = (e: TouchEvent) => {
-      if (isRefreshing) return
-      if (window.scrollY > 5) {
-        isPulling.current = false
-        setPullY(0)
-        return
-      }
-
-      const deltaY = e.touches[0].clientY - touchStartY.current
-      if (deltaY > 0) {
-        isPulling.current = true
-        // Rubber-band effect: resistance increases as you pull further
-        const resistance = Math.min(deltaY * 0.5, PULL_THRESHOLD + 20)
-        setPullY(resistance)
-        // Prevent page scroll while pulling
-        if (deltaY > 10) {
-          e.preventDefault()
-        }
-      } else {
-        isPulling.current = false
-        setPullY(0)
-      }
-    }
-
-    const onTouchEnd = async () => {
-      if (!isPulling.current) return
-      const currentPull = pullY
-
-      if (currentPull >= PULL_THRESHOLD * 0.5) {
-        setIsRefreshing(true)
-        setPullY(PULL_THRESHOLD * 0.5) // Snap to loading position
-        await fetchFreshListings()
-        // Brief delay so spinner is visible
-        await new Promise(r => setTimeout(r, 600))
-        setIsRefreshing(false)
-      }
-
-      isPulling.current = false
-      setPullY(0)
-    }
-
-    el.addEventListener('touchstart', onTouchStart, { passive: true })
-    el.addEventListener('touchmove', onTouchMove, { passive: false })
-    el.addEventListener('touchend', onTouchEnd, { passive: true })
-
-    return () => {
-      el.removeEventListener('touchstart', onTouchStart)
-      el.removeEventListener('touchmove', onTouchMove)
-      el.removeEventListener('touchend', onTouchEnd)
-    }
-  }, [isRefreshing, pullY, fetchFreshListings])
+  // Pull-to-refresh is handled globally by SwipeHandler in layout.tsx
 
   let filtered = activeCategory === "All" ? items : items.filter((i) => i.category === activeCategory)
   
@@ -179,47 +108,8 @@ export function HomeFeed({ initialItems, followingIds = [], currentUserProfile }
   const nearbyHero = remaining.length > 0 ? remaining[0] : null
   const recent = remaining.length > 1 ? remaining.slice(1) : remaining
 
-  // Pull indicator visibility
-  const showPullIndicator = pullY > 0 || isRefreshing
-  const pullProgress = Math.min(pullY / (PULL_THRESHOLD * 0.5), 1)
-
   return (
     <>
-      <div
-        ref={mainRef}
-        style={{
-          transform: showPullIndicator ? `translateY(${Math.min(pullY * 0.4, 32)}px)` : 'translateY(0)',
-          transition: isRefreshing || pullY === 0 ? 'transform 0.3s ease' : 'none',
-        }}
-      >
-      {/* Pull-to-refresh indicator */}
-      {showPullIndicator && (
-        <div
-          className="fixed inset-x-0 z-40 flex justify-center"
-          style={{
-            top: Math.max(8, pullY * 0.3 - 20),
-            opacity: Math.min(pullProgress * 2, 1),
-            transition: isRefreshing ? 'opacity 0.2s ease' : 'none',
-          }}
-        >
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-card shadow-[0_4px_20px_rgba(192,57,91,0.18)]">
-            <svg
-              className={`h-5 w-5 text-primary ${isRefreshing ? 'animate-spin' : ''}`}
-              viewBox="0 0 24 24"
-              fill="none"
-              strokeWidth="2.5"
-              stroke="currentColor"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              style={{
-                transform: isRefreshing ? undefined : `rotate(${pullProgress * 360}deg)`,
-              }}
-            >
-              <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-            </svg>
-          </div>
-        </div>
-      )}
 
       <main className="mx-auto w-full max-w-[390px] min-h-dvh px-5 pb-28 pt-5">
         {/* Top bar */}
@@ -310,7 +200,6 @@ export function HomeFeed({ initialItems, followingIds = [], currentUserProfile }
           </>
         )}
       </main>
-    </div>
     <BottomNav />
     </>
   )
