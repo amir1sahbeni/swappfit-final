@@ -93,18 +93,21 @@ export function SwipeHandler() {
       if (Math.abs(deltaX) < 40) return
 
       const isRootPage = ROOT_PAGES.includes(pathname)
+      const isRTL = document.documentElement.dir === 'rtl'
 
       if (isRootPage) {
         const currentIndex = TAB_ORDER.indexOf(pathname)
         if (currentIndex === -1) return
 
-        if (deltaX < 0) {
-          // Swipe LEFT → Next Tab
+        const logicalDeltaX = isRTL ? -deltaX : deltaX
+
+        if (logicalDeltaX < 0) {
+          // Swipe Forward visually → Next Tab
           if (currentIndex < TAB_ORDER.length - 1) {
             router.push(TAB_ORDER[currentIndex + 1])
           }
-        } else if (deltaX > 0) {
-          // Swipe RIGHT → Previous Tab
+        } else if (logicalDeltaX > 0) {
+          // Swipe Backward visually → Previous Tab
           if (currentIndex > 0) {
             router.push(TAB_ORDER[currentIndex - 1])
           }
