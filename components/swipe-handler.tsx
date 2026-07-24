@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { Loader2 } from 'lucide-react'
 
-const ROOT_PAGES = ['/', '/notifications', '/chats', '/profile', '/search']
+const ROOT_PAGES = ['/', '/notifications', '/chats', '/profile']
 const TAB_ORDER = ['/', '/notifications', '/chats', '/profile']
 
 export function SwipeHandler() {
@@ -110,9 +110,10 @@ export function SwipeHandler() {
           }
         }
       } else {
-        // SWIPE RIGHT FROM EDGE → Go Back
-        // Only trigger manual back if it was a very deliberate swipe from the edge
-        if (deltaX > 50 && startX < 30) {
+        // SECONDARY PAGES → Go Back
+        // Standard iOS is swipe right from left edge (deltaX > 50 && startX < 40)
+        // For RTL or alternative requested behavior, support swipe left from right edge
+        if ( (deltaX > 50 && startX < 40) || (deltaX < -50 && startX > window.innerWidth - 40) ) {
           router.back()
         }
       }
