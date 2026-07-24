@@ -64,7 +64,10 @@ export function SwipeHandler() {
       }
 
       // Only handle right swipe (deltaX > 0) = go back one page
-      // Everything else is disabled
+      // ONLY on secondary pages — on main pages (home/notifications/chats/profile) it's a dead gesture
+      const MAIN_TABS = ['/', '/notifications', '/chats', '/profile']
+      const isMainPage = MAIN_TABS.includes(window.location.pathname)
+      if (isMainPage) return
       if (isHorizontalSwipe !== true) return
       if (deltaX < 50) return
       if (isNavigatingRef.current) return
