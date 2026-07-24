@@ -50,6 +50,7 @@ export function ChatView({
   const [activeMessage, setActiveMessage] = useState<Message | null>(null)
   const [activeMessagePosition, setActiveMessagePosition] = useState<'top' | 'bottom'>('top')
   const [toggledMessageId, setToggledMessageId] = useState<string | null>(null)
+  const [viewingImage, setViewingImage] = useState<string | null>(null)
   const [replyingTo, setReplyingTo] = useState<Message | null>(null)
   const [isUploading, setIsUploading] = useState(false)
   const [isInitialLoad, setIsInitialLoad] = useState(true)
@@ -498,7 +499,17 @@ export function ChatView({
                     } ${msg.message_type === 'image' ? 'p-1' : 'px-4 py-2.5'}`}
                   >
                     {msg.message_type === 'image' && msg.media_url ? (
-                      <img src={msg.media_url} alt="Attached image" className="max-w-[240px] w-full rounded-xl object-cover" />
+                      <img 
+                        src={msg.media_url} 
+                        alt="Attached image" 
+                        className="max-w-[240px] w-full rounded-xl object-cover cursor-pointer" 
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          if (activeMessage?.id !== msg.id) {
+                            setViewingImage(msg.media_url!)
+                          }
+                        }}
+                      />
                     ) : (
                       <span className="break-words">{msg.text}</span>
                     )}
@@ -629,6 +640,32 @@ export function ChatView({
           onClick={() => setActiveMessage(null)}
           onPointerDown={() => setActiveMessage(null)}
         />
+      )}
+
+      {/* Full screen image viewer */}
+      {viewingImage && (
+        <div 
+          className="fixed inset-0 z-50 bg-black/95 flex flex-col animate-in fade-in duration-200"
+          onClick={() => setViewingImage(null)}
+        >
+          <button 
+            className="absolute top-[env(safe-area-inset-top,20px)] right-4 mt-4 p-2 bg-white/10 hover:bg-white/20 text-white rounded-full backdrop-blur-md transition-colors z-[60]"
+            onClick={(e) => {
+              e.stopPropagation()
+              setViewingImage(null)
+            }}
+          >
+            <X className="w-6 h-6" />
+          </button>
+          <div className="flex-1 flex items-center justify-center p-0 w-full h-full" onClick={() => setViewingImage(null)}>
+            <img 
+              src={viewingImage} 
+              alt="Full screen" 
+              className="w-full h-full object-contain"
+              onClick={(e) => e.stopPropagation()}
+            />
+          </div>
+        </div>
       )}
 
     </main>
