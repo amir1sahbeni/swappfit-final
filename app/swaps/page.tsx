@@ -16,8 +16,10 @@ export default async function SwapsPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/auth?redirect=/swaps')
 
-  const proposals = await getUserProposals(user.id)
-  const purchases = await getUserPurchases(user.id)
+  const [proposals, purchases] = await Promise.all([
+    getUserProposals(user.id),
+    getUserPurchases(user.id)
+  ])
 
   // Combine and sort by date
   const history = [

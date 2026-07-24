@@ -23,22 +23,18 @@ export default async function ProfilePage() {
 
 
   const profile = await getCurrentUserProfile()
-  // If authenticated but no profile row, redirect to home — not /auth.
-  // Sending a logged-in user to /auth causes a redirect loop.
   if (!profile) redirect('/')
 
-  const dbListings = await getOwnerListings(profile.id)
+  // Run all independent queries in parallel instead of sequentially
+  const [dbListings, followStats, profileData] = await Promise.all([
+    getOwnerListings(profile.id),
+    getFollowStats(profile.id),
+    supabase.from('profiles').select('swaps_viewed_at').eq('id', user.id).single(),
+  ])
+
   const items = dbListings.map(listing => listingToItem(listing, profile))
-  const followStats = await getFollowStats(profile.id)
+  const seenAt = profileData.data?.swaps_viewed_at || '1970-01-01T00:00:00Z'
 
-  // Count unseen swap proposals for the red dot on My Swaps
-  const { data: profileData } = await supabase
-    .from('profiles')
-    .select('swaps_viewed_at')
-    .eq('id', user.id)
-    .single()
-
-  const seenAt = profileData?.swaps_viewed_at || '1970-01-01T00:00:00Z'
   const { count: unseenSwapCount } = await supabase
     .from('swap_proposals')
     .select('*', { count: 'exact', head: true })

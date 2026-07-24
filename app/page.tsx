@@ -10,17 +10,19 @@ export const dynamic = 'force-dynamic'
 
 
 export default async function Page() {
-  const listings = await getActiveListings()
-
   const supabase = await createServerClient()
   const { data: { user } } = await supabase.auth.getUser()
 
+  // Run listings + user data in parallel
+  const [listings, currentUserProfile] = await Promise.all([
+    getActiveListings(),
+    user ? getCurrentUserProfile() : Promise.resolve(null),
+  ])
+
   let followingIds: string[] = []
-  let currentUserProfile = null
   if (user) {
     const followingProfiles = await getFollowing(user.id)
     followingIds = followingProfiles.map(p => p.id)
-    currentUserProfile = await getCurrentUserProfile()
   }
 
   const items = listings.map(listing => listingToItem(listing, currentUserProfile))

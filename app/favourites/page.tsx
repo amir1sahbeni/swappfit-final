@@ -18,19 +18,20 @@ export default async function FavouritesPage() {
     redirect('/auth?redirect=/favourites')
   }
 
-  const profile = await getCurrentUserProfile()
-
-  const { data: favourites } = await supabase
-    .from('favourites')
-    .select(`
-      listing_id,
-      listings (
-        *,
-        profiles!listings_seller_id_fkey(id, name, avatar_url, governorate, city, precise_lat, precise_lng)
-      )
-    `)
-    .eq('user_id', user.id)
-    .order('created_at', { ascending: false })
+  const [profile, { data: favourites }] = await Promise.all([
+    getCurrentUserProfile(),
+    supabase
+      .from('favourites')
+      .select(`
+        listing_id,
+        listings (
+          *,
+          profiles!listings_seller_id_fkey(id, name, avatar_url, governorate, city, precise_lat, precise_lng)
+        )
+      `)
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+  ])
 
   const items = (favourites || [])
     .map(f => f.listings)
