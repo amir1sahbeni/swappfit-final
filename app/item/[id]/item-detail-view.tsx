@@ -16,6 +16,7 @@ export function ItemDetailView({ item, seller, initialSaved, isOwner, currentUse
   const t = useTranslations('ItemDetail')
   const router = useRouter()
   const [saved, setSaved] = useState(initialSaved)
+  const [isSaving, setIsSaving] = useState(false)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [viewerOpen, setViewerOpen] = useState(false)
   const [listingStatus, setListingStatus] = useState(item.status || 'active')
@@ -135,13 +136,15 @@ export function ItemDetailView({ item, seller, initialSaved, isOwner, currentUse
   async function handleSave() {
     const newSaved = !saved
     setSaved(newSaved) // optimistic update
+    setIsSaving(true)
     try {
       await toggleFavourite(item.id, newSaved)
     } catch (err: any) {
       // Roll back the optimistic update on failure
       setSaved(!newSaved)
       console.error('Failed to toggle favourite:', err?.message || err)
-      alert('Could not update favourite: ' + (err?.message || 'Unknown error'))
+    } finally {
+      setIsSaving(false)
     }
   }
 
@@ -247,10 +250,10 @@ export function ItemDetailView({ item, seller, initialSaved, isOwner, currentUse
           <button
             aria-label="Save to favorites"
             onClick={handleSave}
-            disabled={isPending}
+            disabled={isSaving}
             className="flex h-10 w-10 items-center justify-center rounded-full bg-card/90 backdrop-blur transition-transform active:scale-90"
           >
-            {isPending ? (
+            {isSaving ? (
               <Loader2 className="h-5 w-5 text-primary animate-spin" />
             ) : (
               <Heart className="h-5 w-5 text-primary" fill={saved ? "var(--primary)" : "none"} />
