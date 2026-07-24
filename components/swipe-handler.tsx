@@ -14,6 +14,21 @@ export function SwipeHandler() {
   const [pullY, setPullY] = useState(0)
   const [refreshing, setRefreshing] = useState(false)
   const refreshingRef = useRef(false)
+  
+  // Lock to prevent rapid-fire swipes stacking up and breaking the architecture
+  const isNavigatingRef = useRef(false)
+
+  // Unlock whenever the route actually changes
+  useEffect(() => {
+    isNavigatingRef.current = false
+  }, [pathname])
+
+  // Prefetch tabs so they are instantly ready ("unlocked" from the start)
+  useEffect(() => {
+    TAB_ORDER.forEach(path => {
+      router.prefetch(path)
+    })
+  }, [router])
 
   useEffect(() => {
     let startX = 0
@@ -39,7 +54,6 @@ export function SwipeHandler() {
       const diffY = currentY - startY
       const absDiffY = Math.abs(diffY)
 
-      // Lock direction on first significant movement
       if (isHorizontalSwipe === null) {
         if (diffX > absDiffY && diffX > 10) {
           isHorizontalSwipe = true
@@ -51,13 +65,11 @@ export function SwipeHandler() {
       const currentPageType = ROOT_PAGES.includes(pathname) ? 'main' : 'secondary'
 
       if (isHorizontalSwipe === true) {
-        // Completely disable native browser swiping so we have 100% control over the rules
         if (e.cancelable) {
           e.preventDefault()
         }
       } else if (isHorizontalSwipe === false && isPulling && diffY > 0) {
-        // Pull to refresh custom logic
-        if (e.cancelable) e.preventDefault() // prevent overscroll bounce
+        if (e.cancelable) e.preventDefault()
         currentPullY = Math.min(diffY * 0.4, 100)
         setPullY(currentPullY)
       }
@@ -82,40 +94,37 @@ export function SwipeHandler() {
         }
       }
 
-      // Ignore if swipe took too long
       if (elapsed > 500) return
-
-      // Ignore if it was clearly a vertical scroll lock
       if (isHorizontalSwipe === false) return
-
-      // Ignore if swipe too short
       if (Math.abs(deltaX) < 40) return
+
+      // IF WAITING FOR PAGE LOAD, IGNORE SWIPES SO THEY DONT STACK UP
+      if (isNavigatingRef.current) return
 
       const currentPageType = ROOT_PAGES.includes(pathname) ? 'main' : 'secondary'
       const isRTL = document.documentElement.dir === 'rtl'
 
       if (currentPageType === 'main') {
-        // MAIN PAGES: Index-based carousel logic
         const currentIndex = TAB_ORDER.indexOf(pathname)
         if (currentIndex === -1) return
 
         const logicalDeltaX = isRTL ? -deltaX : deltaX
 
         if (logicalDeltaX < 0) {
-          // Swipe Forward visually → Next Tab
           if (currentIndex < TAB_ORDER.length - 1) {
+            isNavigatingRef.current = true
             router.push(TAB_ORDER[currentIndex + 1])
           }
         } else if (logicalDeltaX > 0) {
-          // Swipe Backward visually → Previous Tab
           if (currentIndex > 0) {
+            isNavigatingRef.current = true
             router.push(TAB_ORDER[currentIndex - 1])
           }
         }
       } else {
-        // SECONDARY PAGES: Stack-based back logic
-        // Rule: Swipe left (deltaX < 0) = go back. Swipe right (deltaX > 0) = disabled/dead.
+        // SECONDARY PAGES
         if (deltaX < -40) {
+          isNavigatingRef.current = true
           router.back()
         }
       }
