@@ -12,7 +12,8 @@ import { listingToItem } from '@/lib/utils'
 import { redirect } from 'next/navigation'
 import { getTranslations } from 'next-intl/server'
 
-export const revalidate = 60
+export const dynamic = 'force-dynamic'
+
 
 export default async function ProfilePage() {
   const t = await getTranslations('Profile')
