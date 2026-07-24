@@ -48,9 +48,14 @@ export function SwipeHandler() {
         }
       }
 
+      const isRootPage = ROOT_PAGES.includes(pathname)
+
       if (isHorizontalSwipe === true) {
-        // STOP iOS native back/forward swipe gesture completely!
-        if (e.cancelable) e.preventDefault()
+        // ONLY stop native swiping if we are on a main tab.
+        // If we're on a listing (not root), let the native iOS swipe-to-go-back work!
+        if (isRootPage && e.cancelable) {
+          e.preventDefault()
+        }
       } else if (isHorizontalSwipe === false && isPulling && diffY > 0) {
         // Pull to refresh custom logic
         if (e.cancelable) e.preventDefault() // prevent overscroll bounce
@@ -81,11 +86,11 @@ export function SwipeHandler() {
       // Ignore if swipe took too long
       if (elapsed > 500) return
 
-      // Ignore if more vertical than horizontal
-      if (Math.abs(deltaY) > Math.abs(deltaX)) return
+      // Ignore if it was clearly a vertical scroll lock
+      if (isHorizontalSwipe === false) return
 
       // Ignore if swipe too short
-      if (Math.abs(deltaX) < 80) return
+      if (Math.abs(deltaX) < 40) return
 
       const isRootPage = ROOT_PAGES.includes(pathname)
 
@@ -98,7 +103,7 @@ export function SwipeHandler() {
           if (currentIndex < TAB_ORDER.length - 1) {
             router.push(TAB_ORDER[currentIndex + 1])
           }
-        } else {
+        } else if (deltaX > 0) {
           // Swipe RIGHT → Previous Tab
           if (currentIndex > 0) {
             router.push(TAB_ORDER[currentIndex - 1])
@@ -106,7 +111,8 @@ export function SwipeHandler() {
         }
       } else {
         // SWIPE RIGHT FROM EDGE → Go Back
-        if (deltaX > 0 && startX < 30) {
+        // Only trigger manual back if it was a very deliberate swipe from the edge
+        if (deltaX > 50 && startX < 30) {
           router.back()
         }
       }
