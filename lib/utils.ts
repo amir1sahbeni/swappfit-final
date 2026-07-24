@@ -93,7 +93,7 @@ export function listingToItem(listing: Listing, currentUserProfile?: Profile | n
     condition: listing.condition,
     brand: listing.brand,
     size: listing.size,
-    description: listing.description,
+    description: listing.description ?? '',
     sellerId: listing.seller_id,
     distance: (listing.profiles?.city && listing.profiles?.governorate) ? `${listing.profiles.city}, ${listing.profiles.governorate}` : (listing.profiles?.location ?? ''),
     postedAt: formatRelativeTime(listing.created_at),

@@ -19,8 +19,8 @@ export async function getActiveListings(): Promise<Listing[]> {
     let query = supabase
       .from('listings')
       .select(`
-        *,
-        profiles ( location, governorate, city, location_sharing_enabled, precise_lat, precise_lng )
+        id, seller_id, name, brand, size, description, price, images, category, condition, status, created_at, updated_at, listing_lat, listing_lng, size_type, gender, featured_until,
+        profiles ( id, location, governorate, city, location_sharing_enabled, precise_lat, precise_lng )
       `)
       .eq('status', 'active')
       .order('created_at', { ascending: false })

@@ -43,7 +43,7 @@ export default function AuthPage() {
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
-        router.replace(redirectTo)
+        window.location.href = redirectTo
       }
     })
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -94,8 +94,8 @@ export default function AuthPage() {
           password,
         })
         if (error) throw error
-        // Redirect back to original destination after successful login
-        router.replace(redirectTo)
+        // Force full page reload to ensure Server Components see the fresh auth cookie
+        window.location.href = redirectTo
       } else {
         const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
         const emailRedirectTo = `${siteUrl}${redirectTo !== '/' ? redirectTo : ''}`
@@ -133,7 +133,7 @@ export default function AuthPage() {
         }
 
         // Redirect to the intended destination after signup
-        router.replace(redirectTo)
+        window.location.href = redirectTo
       }
     } catch (err: any) {
       setError(err.message)

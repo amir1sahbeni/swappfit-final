@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { redirect } from "next/navigation"
-import { PageHeader } from "@/components/page-header"
+
 import { BottomNav } from "@/components/bottom-nav"
 import { createServerClient } from "@/lib/supabase/server"
 import { getUserConversations } from "@/lib/queries/conversations"
@@ -19,7 +19,12 @@ export default async function ChatsPage() {
 
   return (
     <main className="mx-auto w-full max-w-[390px] min-h-dvh px-5 pb-28 pt-2">
-      <PageHeader title={t('title')} subtitle={t('subtitle')} back={false} />
+      <header className="flex items-start justify-between bg-background pb-4" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 20px)' }}>
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">{t('title')}</h1>
+          <p className="mt-0.5 text-xs text-muted-foreground">{t('subtitle')}</p>
+        </div>
+      </header>
 
       <ChatsList initialConversations={conversations} recentSellers={recentSellers} />
 
