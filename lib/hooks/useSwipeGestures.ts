@@ -27,6 +27,12 @@ export function useSwipeGestures() {
       const deltaY = endY - startY
       const elapsed = Date.now() - startTime
 
+      // Pull to refresh logic (refresh if pulled down at top of page)
+      if (window.scrollY <= 0 && deltaY > 120 && Math.abs(deltaY) > Math.abs(deltaX)) {
+        window.location.reload()
+        return
+      }
+
       // Ignore if swipe took too long (scrolling)
       if (elapsed > 500) return
 
