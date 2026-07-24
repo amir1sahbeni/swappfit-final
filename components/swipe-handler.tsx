@@ -48,12 +48,11 @@ export function SwipeHandler() {
         }
       }
 
-      const isRootPage = ROOT_PAGES.includes(pathname)
+      const currentPageType = ROOT_PAGES.includes(pathname) ? 'main' : 'secondary'
 
       if (isHorizontalSwipe === true) {
-        // ONLY stop native swiping if we are on a main tab.
-        // If we're on a listing (not root), let the native iOS swipe-to-go-back work!
-        if (isRootPage && e.cancelable) {
+        // Completely disable native browser swiping so we have 100% control over the rules
+        if (e.cancelable) {
           e.preventDefault()
         }
       } else if (isHorizontalSwipe === false && isPulling && diffY > 0) {
@@ -92,10 +91,11 @@ export function SwipeHandler() {
       // Ignore if swipe too short
       if (Math.abs(deltaX) < 40) return
 
-      const isRootPage = ROOT_PAGES.includes(pathname)
+      const currentPageType = ROOT_PAGES.includes(pathname) ? 'main' : 'secondary'
       const isRTL = document.documentElement.dir === 'rtl'
 
-      if (isRootPage) {
+      if (currentPageType === 'main') {
+        // MAIN PAGES: Index-based carousel logic
         const currentIndex = TAB_ORDER.indexOf(pathname)
         if (currentIndex === -1) return
 
@@ -113,10 +113,9 @@ export function SwipeHandler() {
           }
         }
       } else {
-        // SECONDARY PAGES → Go Back
-        // Standard iOS is swipe right from left edge (deltaX > 50 && startX < 40)
-        // For RTL or alternative requested behavior, support swipe left from right edge
-        if ( (deltaX > 50 && startX < 40) || (deltaX < -50 && startX > window.innerWidth - 40) ) {
+        // SECONDARY PAGES: Stack-based back logic
+        // Rule: Swipe left (deltaX < 0) = go back. Swipe right (deltaX > 0) = disabled/dead.
+        if (deltaX < -40) {
           router.back()
         }
       }
