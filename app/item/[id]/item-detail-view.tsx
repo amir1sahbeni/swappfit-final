@@ -213,6 +213,7 @@ export function ItemDetailView({ item, seller, initialSaved, isOwner, currentUse
           className="block w-full text-left relative aspect-square transition-transform duration-100 ease-out"
           style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${scale})`, touchAction: scale > 1 ? 'none' : 'auto' }}
           aria-label="View full image"
+          data-no-swipe="true"
         >
           <Image
             src={item.image || "/placeholder.svg"}
