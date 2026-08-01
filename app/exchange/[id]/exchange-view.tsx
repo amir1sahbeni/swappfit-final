@@ -13,15 +13,15 @@ export function ExchangeView({
   proposal: initialProposal,
   partner,
   isReceiver,
-  wantedItem,
-  offeredItem,
+  wantedItems,
+  offeredItems,
   currentUserId,
 }: {
   proposal: SwapProposal
   partner: Profile
   isReceiver: boolean
-  wantedItem: Item
-  offeredItem: Item
+  wantedItems: Item[]
+  offeredItems: Item[]
   currentUserId: string
 }) {
   const t = useTranslations('Exchange')
@@ -36,7 +36,6 @@ export function ExchangeView({
   const [cancelConfirm, setCancelConfirm] = useState(false)
   const supabase = createClient()
 
-  // Check if current user has already rated the partner for this swap
   useEffect(() => {
     const checkRating = async () => {
       const { data: { user } } = await supabase.auth.getUser()
@@ -52,7 +51,6 @@ export function ExchangeView({
     checkRating()
   }, [proposal.id])
 
-  // Realtime subscription: update proposal state without page refresh
   useEffect(() => {
     const channel = supabase
       .channel(`proposal_${proposal.id}`)
@@ -124,6 +122,9 @@ export function ExchangeView({
   const isTerminal = ['declined', 'cancelled', 'completed'].includes(proposal.status)
   const canCancel = isProposer && !isTerminal
 
+  const myItems = isReceiver ? wantedItems : offeredItems
+  const theirItems = isReceiver ? offeredItems : wantedItems
+
   return (
     <main className="mx-auto w-full max-w-[390px] min-h-dvh px-5 pb-28 pt-2">
       <header className="flex items-center justify-between">
@@ -142,17 +143,49 @@ export function ExchangeView({
 
       <div className="mt-8 flex items-center justify-center gap-4">
         <div className="flex w-28 flex-col items-center">
-          <img src={isReceiver ? wantedItem.image || "/placeholder.svg" : offeredItem.image || "/placeholder.svg"} alt="Item" className="aspect-square w-full rounded-2xl object-cover shadow-sm no-rtl-flip" />
-          <p className="mt-2 truncate text-xs font-semibold text-foreground text-center w-full">
+          <div className="relative h-28 w-28">
+            {myItems.slice(0, 3).map((item, index) => (
+              <img 
+                key={item.id}
+                src={item.image || "/placeholder.svg"} 
+                alt="Item" 
+                className="absolute aspect-square w-full rounded-2xl object-cover shadow-sm no-rtl-flip border-2 border-background" 
+                style={{ top: index * 6, left: index * 6, zIndex: 10 - index }}
+              />
+            ))}
+            {myItems.length > 1 && (
+              <div className="absolute -right-2 -top-2 z-20 flex h-6 w-6 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-white shadow-sm">
+                {myItems.length}
+              </div>
+            )}
+          </div>
+          <p className="mt-5 truncate text-xs font-semibold text-foreground text-center w-full">
             {isReceiver ? t('yourItem') : t('youOffered')}
           </p>
         </div>
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-muted">
+        
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-muted mt-[-20px]">
           <ArrowRightLeft className="h-4 w-4 text-muted-foreground" />
         </div>
+        
         <div className="flex w-28 flex-col items-center">
-          <img src={isReceiver ? offeredItem.image || "/placeholder.svg" : wantedItem.image || "/placeholder.svg"} alt="Item" className="aspect-square w-full rounded-2xl object-cover shadow-sm no-rtl-flip" />
-          <p className="mt-2 truncate text-xs font-semibold text-foreground text-center w-full">
+          <div className="relative h-28 w-28">
+            {theirItems.slice(0, 3).map((item, index) => (
+              <img 
+                key={item.id}
+                src={item.image || "/placeholder.svg"} 
+                alt="Item" 
+                className="absolute aspect-square w-full rounded-2xl object-cover shadow-sm no-rtl-flip border-2 border-background" 
+                style={{ top: index * 6, right: index * 6, zIndex: 10 - index }}
+              />
+            ))}
+            {theirItems.length > 1 && (
+              <div className="absolute -left-2 -top-2 z-20 flex h-6 w-6 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-white shadow-sm">
+                {theirItems.length}
+              </div>
+            )}
+          </div>
+          <p className="mt-5 truncate text-xs font-semibold text-foreground text-center w-full">
             {isReceiver ? t('theyOffer') : t('theyGive')}
           </p>
         </div>
@@ -178,7 +211,6 @@ export function ExchangeView({
         )}
       </div>
 
-      {/* Rating reminder (non-blocking) */}
       {proposal.status === 'completed' && !hasRated && (
         <Link
           href={`/rating/${proposal.id}`}
@@ -189,14 +221,12 @@ export function ExchangeView({
         </Link>
       )}
 
-      {/* Action error */}
       {actionError && (
         <div className="mt-4 rounded-xl bg-destructive/10 px-4 py-3 text-sm text-destructive font-medium">
           {actionError}
         </div>
       )}
 
-      {/* Cancel confirmation modal */}
       {cancelConfirm && (
         <div className="fixed inset-0 z-[60] flex items-end justify-center bg-background/80 p-5 backdrop-blur-sm">
           <div className="w-full max-w-[390px] rounded-[32px] bg-card p-6 shadow-2xl animate-in slide-in-from-bottom-10">
@@ -233,7 +263,6 @@ export function ExchangeView({
       {/* Sticky action bar */}
       <div className="fixed inset-x-0 bottom-0 z-50 mx-auto max-w-[390px] border-t border-border bg-card/90 px-5 py-3 pb-[calc(env(safe-area-inset-bottom,8px)+10px)] backdrop-blur-xl">
 
-        {/* PENDING — receiver sees Accept/Decline */}
         {proposal.status === "pending" && isReceiver && (
           <div className="flex flex-col gap-2">
             <div className="flex gap-3">
@@ -263,7 +292,6 @@ export function ExchangeView({
           </div>
         )}
 
-        {/* PENDING — proposer sees waiting + cancel */}
         {proposal.status === "pending" && !isReceiver && (
           <div className="flex flex-col gap-2">
             <div className="flex h-12 items-center justify-center rounded-full bg-muted text-sm font-medium text-muted-foreground">
@@ -287,7 +315,6 @@ export function ExchangeView({
           </div>
         )}
 
-        {/* ACCEPTED */}
         {proposal.status === "accepted" && (
           <div className="flex w-full flex-col gap-2">
             <Link
@@ -324,7 +351,6 @@ export function ExchangeView({
           </div>
         )}
 
-        {/* COMPLETED */}
         {proposal.status === "completed" && (
           <div className="flex w-full flex-col gap-3">
             <div className="flex flex-col items-center gap-2">
@@ -351,7 +377,6 @@ export function ExchangeView({
           </div>
         )}
 
-        {/* DECLINED or CANCELLED */}
         {(proposal.status === "declined" || proposal.status === "cancelled") && (
           <div className="flex w-full flex-col gap-3">
             <div className="flex h-12 items-center justify-center rounded-full bg-destructive/10 text-sm font-semibold text-destructive">

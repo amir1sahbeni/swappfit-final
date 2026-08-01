@@ -56,12 +56,22 @@ export interface Listing {
   profiles?: Profile
 }
 
+export interface SwapProposalItem {
+  id: string
+  proposal_id: string
+  listing_id: string
+  side: 'offered' | 'wanted'
+  created_at: string
+  // Joined
+  listing?: Listing
+}
+
 export interface SwapProposal {
   id: string
   proposer_id: string
   receiver_id: string
-  offered_item_id: string
-  wanted_item_id: string
+  offered_item_id?: string | null
+  wanted_item_id?: string | null
   note: string
   status: ProposalStatus
   created_at: string
@@ -69,11 +79,13 @@ export interface SwapProposal {
   proposer_confirmed?: boolean
   receiver_confirmed?: boolean
   completed_at?: string | null
+  cancelled_at?: string | null
   // Joined
   offered_item?: Listing
   wanted_item?: Listing
   proposer?: Profile
   receiver?: Profile
+  swap_proposal_items?: SwapProposalItem[]
 }
 
 export interface Conversation {

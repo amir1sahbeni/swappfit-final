@@ -352,7 +352,14 @@
     "addMessage": "Ajoute un message (optionnel)",
     "placeholderMessage": "Salut",
     "placeholderMessage2": "J'aimerais échanger mon article contre ton",
-    "sendProposal": "Envoyer la proposition"
+    "sendProposal": "Envoyer la proposition",
+    "theirCloset": "Dressing de {name}",
+    "itemsSelected": "{count}/5 articles sélectionnés",
+    "yourCloset": "Votre Dressing",
+    "youWant": "Tu veux",
+    "youOffer": "Tu offres",
+    "preSelected": "Pré-sélectionné",
+    "locked": "Verrouillé"
   },
   "Rating": {
     "leaveReview": "Laisser une critique",

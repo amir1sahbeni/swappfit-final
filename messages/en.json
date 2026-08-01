@@ -352,7 +352,14 @@
     "addMessage": "Add a message (optional)",
     "placeholderMessage": "Hi",
     "placeholderMessage2": "I'd love to swap my item for your",
-    "sendProposal": "Send Proposal"
+    "sendProposal": "Send Proposal",
+    "theirCloset": "{name}'s Closet",
+    "itemsSelected": "{count}/5 items selected",
+    "yourCloset": "Your Closet",
+    "youWant": "You want",
+    "youOffer": "You offer",
+    "preSelected": "Pre-selected",
+    "locked": "Locked"
   },
   "Rating": {
     "leaveReview": "Leave Review",

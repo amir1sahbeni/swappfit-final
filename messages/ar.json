@@ -351,8 +351,15 @@
     "addItemFirst": "أضف عنصراً أولاً",
     "addMessage": "أضف رسالة (اختياري)",
     "placeholderMessage": "مرحباً",
-    "placeholderMessage2": "أود تبادل عنصري مع",
-    "sendProposal": "إرسال الاقتراح"
+    "placeholderMessage2": "أود مبادلة عنصري بـ",
+    "sendProposal": "إرسال العرض",
+    "theirCloset": "خزانة {name}",
+    "itemsSelected": "{count}/5 عناصر محددة",
+    "yourCloset": "خزانتك",
+    "youWant": "أنت تريد",
+    "youOffer": "أنت تقدم",
+    "preSelected": "محدد مسبقاً",
+    "locked": "مقفل"
   },
   "Rating": {
     "leaveReview": "ترك تقييم",

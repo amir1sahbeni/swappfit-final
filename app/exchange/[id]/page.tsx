@@ -24,13 +24,29 @@ export default async function ExchangePage({ params }: { params: Promise<{ id: s
   const isReceiver = proposal.receiver_id === user.id
   const partner = isReceiver ? proposal.proposer : proposal.receiver
 
+  const wantedItems = (proposal.swap_proposal_items || [])
+    .filter(i => i.side === 'wanted')
+    .map(i => listingToItem(i.listing!))
+
+  const offeredItems = (proposal.swap_proposal_items || [])
+    .filter(i => i.side === 'offered')
+    .map(i => listingToItem(i.listing!))
+
+  // Legacy fallback for 1-to-1 swaps
+  if (wantedItems.length === 0 && proposal.wanted_item) {
+    wantedItems.push(listingToItem(proposal.wanted_item))
+  }
+  if (offeredItems.length === 0 && proposal.offered_item) {
+    offeredItems.push(listingToItem(proposal.offered_item))
+  }
+
   return (
     <ExchangeView 
       proposal={proposal} 
       partner={partner!} 
       isReceiver={isReceiver} 
-      wantedItem={listingToItem(proposal.wanted_item!)}
-      offeredItem={listingToItem(proposal.offered_item!)}
+      wantedItems={wantedItems}
+      offeredItems={offeredItems}
       currentUserId={user.id}
     />
   )

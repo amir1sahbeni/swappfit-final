@@ -9,8 +9,8 @@ import { revalidatePath } from 'next/cache'
 // Returns { success, proposalId?, error? } — never throws (so client can show inline errors)
 // ─────────────────────────────────────────────
 export async function sendProposal(data: {
-  offeredItemId: string
-  wantedItemId: string
+  offeredItemIds: string[]
+  wantedItemIds: string[]
   receiverId: string
   note: string
 }): Promise<{ success: boolean; proposalId?: string; error?: string }> {
@@ -18,57 +18,63 @@ export async function sendProposal(data: {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/auth')
 
-  // ── Guard 1: same proposer already has this exact combo active ──
-  const { data: exactDupe } = await supabase
-    .from('swap_proposals')
-    .select('id')
-    .eq('proposer_id', user.id)
-    .eq('offered_item_id', data.offeredItemId)
-    .eq('wanted_item_id', data.wantedItemId)
-    .in('status', ['pending', 'accepted'])
-    .maybeSingle()
+  if (!data.offeredItemIds.length || !data.wantedItemIds.length) {
+    return { success: false, error: 'Select at least one item on each side.' }
+  }
+  if (data.offeredItemIds.length > 5 || data.wantedItemIds.length > 5) {
+    return { success: false, error: 'Maximum 5 items allowed per side.' }
+  }
 
-  if (exactDupe) {
-    return { success: false, error: 'EXACT_PROPOSAL_EXISTS' }
+  // ── Guard 1: same proposer already has this exact combo active? Not needed.
+  // We use the new rule: If current user already has a pending OR accepted proposal where ANY of the wanted items match items they are trying to get → block
+  const { data: duplicateWanted } = await supabase
+    .from('swap_proposal_items')
+    .select('proposal_id, swap_proposals!inner(proposer_id, status)')
+    .in('listing_id', data.wantedItemIds)
+    .eq('swap_proposals.proposer_id', user.id)
+    .in('swap_proposals.status', ['pending', 'accepted'])
+    .limit(1)
+
+  if (duplicateWanted && duplicateWanted.length > 0) {
+    return { success: false, error: 'You already have a pending swap for one of these items. Wait for the seller to respond.' }
   }
 
   // ── Guard 2: offered item already locked in another proposal ──
-  const { data: offeredLocked } = await supabase
-    .from('swap_proposals')
-    .select('id')
-    .eq('proposer_id', user.id)
-    .eq('offered_item_id', data.offeredItemId)
-    .in('status', ['pending', 'accepted'])
-    .maybeSingle()
+  const { data: lockedOffered } = await supabase
+    .from('swap_proposal_items')
+    .select('proposal_id, swap_proposals!inner(status)')
+    .in('listing_id', data.offeredItemIds)
+    .in('swap_proposals.status', ['pending', 'accepted'])
+    .limit(1)
 
-  if (offeredLocked) {
-    return { success: false, error: 'OFFERED_ITEM_LOCKED' }
+  if (lockedOffered && lockedOffered.length > 0) {
+    return { success: false, error: 'One of your offered items is already in a pending swap.' }
   }
 
-  // ── Guard 3: same buyer already has pending purchase for the wanted item ──
+  // ── Guard 3: same buyer already has pending purchase for ANY wanted item ──
   const { data: purchaseConflict } = await supabase
     .from('purchases')
     .select('id, purchase_items!inner(item_id)')
     .eq('buyer_id', user.id)
     .in('status', ['pending_seller_approval', 'accepted'])
-    .eq('purchase_items.item_id', data.wantedItemId)
-    .maybeSingle()
+    .in('purchase_items.item_id', data.wantedItemIds)
+    .limit(1)
 
-  if (purchaseConflict) {
-    return { success: false, error: 'PENDING_PURCHASE_EXISTS' }
+  if (purchaseConflict && purchaseConflict.length > 0) {
+    return { success: false, error: 'You have a pending purchase for one of these items.' }
   }
 
   // ── Guard 4: fetch item names for notifications ──
   const { data: wantedListing } = await supabase
     .from('listings')
     .select('name')
-    .eq('id', data.wantedItemId)
+    .eq('id', data.wantedItemIds[0])
     .single()
 
   const { data: offeredListing } = await supabase
     .from('listings')
     .select('name')
-    .eq('id', data.offeredItemId)
+    .eq('id', data.offeredItemIds[0])
     .single()
 
   // ── Create proposal — listing stays 'active'; no status change on proposal creation ──
@@ -77,8 +83,8 @@ export async function sendProposal(data: {
     .insert({
       proposer_id: user.id,
       receiver_id: data.receiverId,
-      offered_item_id: data.offeredItemId,
-      wanted_item_id: data.wantedItemId,
+      offered_item_id: data.offeredItemIds[0], // for legacy compat
+      wanted_item_id: data.wantedItemIds[0], // for legacy compat
       note: data.note,
       status: 'pending',
     })
@@ -88,6 +94,13 @@ export async function sendProposal(data: {
   if (propErr || !proposal) {
     return { success: false, error: 'FAILED_TO_CREATE_PROPOSAL' }
   }
+
+  // ── Insert multi-items ──
+  const proposalItems = [
+    ...data.offeredItemIds.map(id => ({ proposal_id: proposal.id, listing_id: id, side: 'offered' })),
+    ...data.wantedItemIds.map(id => ({ proposal_id: proposal.id, listing_id: id, side: 'wanted' }))
+  ]
+  await supabase.from('swap_proposal_items').insert(proposalItems)
 
   // ── Find or create conversation ──
   const { data: existing } = await supabase
@@ -105,7 +118,7 @@ export async function sendProposal(data: {
       .insert({
         participant_a: user.id,
         participant_b: data.receiverId,
-        listing_id: data.wantedItemId,
+        listing_id: data.wantedItemIds[0],
         proposal_id: proposal.id,
         last_message: 'Swap proposed',
         last_message_at: new Date().toISOString(),
@@ -149,7 +162,7 @@ export async function updateProposalStatus(
 
   const { data: proposal, error: fetchErr } = await supabase
     .from('swap_proposals')
-    .select('*, offered_item:listings!offered_item_id(name), wanted_item:listings!wanted_item_id(name)')
+    .select('*, offered_item:listings!offered_item_id(name), wanted_item:listings!wanted_item_id(name), items:swap_proposal_items(listing_id)')
     .eq('id', proposalId)
     .single()
 
@@ -158,6 +171,8 @@ export async function updateProposalStatus(
   if (proposal.proposer_id !== user.id && proposal.receiver_id !== user.id) {
     throw new Error('UNAUTHORIZED')
   }
+  
+  const allItemIds = proposal.items ? proposal.items.map((i: any) => i.listing_id) : [proposal.offered_item_id, proposal.wanted_item_id]
 
   if (status === 'accepted') {
     // Update proposal
@@ -172,28 +187,26 @@ export async function updateProposalStatus(
     await supabase
       .from('listings')
       .update({ status: 'swapped', updated_at: new Date().toISOString() })
-      .in('id', [proposal.offered_item_id, proposal.wanted_item_id])
+      .in('id', allItemIds)
 
-    // ── Auto-decline all other pending proposals involving either item ──
+    // ── Auto-decline all other pending proposals involving ANY item ──
     const { data: conflicting } = await supabase
-      .from('swap_proposals')
-      .select('id, proposer_id, receiver_id')
-      .neq('id', proposalId)
-      .eq('status', 'pending')
-      .or(
-        `offered_item_id.in.(${proposal.offered_item_id},${proposal.wanted_item_id}),` +
-        `wanted_item_id.in.(${proposal.offered_item_id},${proposal.wanted_item_id})`
-      )
+      .from('swap_proposal_items')
+      .select('proposal_id, swap_proposals!inner(status, proposer_id)')
+      .neq('proposal_id', proposalId)
+      .eq('swap_proposals.status', 'pending')
+      .in('listing_id', allItemIds)
 
     if (conflicting && conflicting.length > 0) {
-      const conflictIds = conflicting.map(p => p.id)
+      const conflictIds = [...new Set(conflicting.map(p => p.proposal_id))]
       await supabase
         .from('swap_proposals')
         .update({ status: 'declined', updated_at: new Date().toISOString() })
         .in('id', conflictIds)
 
       const swapDeclineNotifs = conflicting.map(p => ({
-        user_id: p.proposer_id,
+        // @ts-ignore
+        user_id: p.swap_proposals.proposer_id,
         type: 'swap_declined',
         text: JSON.stringify({ wantedItemName: proposal.wanted_item?.name || 'Item', offeredItemName: proposal.offered_item?.name || 'Item', reason: 'unavailable' }),
         read: false,
@@ -201,11 +214,11 @@ export async function updateProposalStatus(
       await supabase.from('notifications').insert(swapDeclineNotifs)
     }
 
-    // ── Auto-decline all pending purchases for either item ──
+    // ── Auto-decline all pending purchases for ANY item ──
     const { data: conflictingPurchases } = await supabase
       .from('purchase_items')
       .select('purchase_id, purchases!inner(id, buyer_id, status)')
-      .in('item_id', [proposal.offered_item_id, proposal.wanted_item_id])
+      .in('item_id', allItemIds)
       .eq('purchases.status', 'pending_seller_approval')
 
     if (conflictingPurchases && conflictingPurchases.length > 0) {
@@ -295,7 +308,7 @@ export async function updateProposalStatus(
       await supabase
         .from('listings')
         .update({ status: 'swapped', updated_at: new Date().toISOString() })
-        .in('id', [proposal.offered_item_id, proposal.wanted_item_id])
+        .in('id', allItemIds)
 
       await supabase.from('notifications').insert([
         {
@@ -354,7 +367,7 @@ export async function cancelProposal(
 
   const { data: proposal, error: fetchErr } = await supabase
     .from('swap_proposals')
-    .select('*, offered_item:listings!offered_item_id(name), wanted_item:listings!wanted_item_id(name)')
+    .select('*, offered_item:listings!offered_item_id(name), wanted_item:listings!wanted_item_id(name), items:swap_proposal_items(listing_id)')
     .eq('id', proposalId)
     .single()
 
@@ -378,12 +391,13 @@ export async function cancelProposal(
 
   if (error) return { success: false, error: 'FAILED_TO_CANCEL' }
 
-  // If swap was accepted, revert both listings to 'active'
+  // If swap was accepted, revert all listings to 'active'
   if (wasAccepted) {
+    const allItemIds = proposal.items ? proposal.items.map((i: any) => i.listing_id) : [proposal.offered_item_id, proposal.wanted_item_id]
     await supabase
       .from('listings')
       .update({ status: 'active', updated_at: new Date().toISOString() })
-      .in('id', [proposal.offered_item_id, proposal.wanted_item_id])
+      .in('id', allItemIds)
   }
 
   // Notify receiver

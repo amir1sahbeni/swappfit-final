@@ -28,6 +28,9 @@ export default async function ProposePage({ params }: { params: Promise<{ id: st
   // Fetch only the user's active listings to offer (getUserListings already filters status='active')
   const dbMyItems = await getUserListings(user.id)
 
+  // Fetch all of the seller's active listings
+  const dbSellerItems = await getUserListings(wantedListing.seller_id)
+
   // Fetch IDs of items already locked in pending/accepted proposals (as offeredItem)
   const { data: lockedProposals } = await supabase
     .from('swap_proposals')
@@ -47,10 +50,12 @@ export default async function ProposePage({ params }: { params: Promise<{ id: st
     .maybeSingle()
 
   const myItems = dbMyItems.map(listingToItem)
+  const sellerItems = dbSellerItems.map(listingToItem)
 
   return (
     <ProposeView
       wantedItem={wantedItem}
+      sellerItems={sellerItems}
       receiver={receiverProfile}
       myItems={myItems}
       lockedItemIds={lockedItemIds}

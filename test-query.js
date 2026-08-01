@@ -1,0 +1,37 @@
+const https = require('https');
+
+const SUPABASE_URL = 'https://ilkuzxbmpcvgsgtgljhr.supabase.co';
+const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlsa3V6eGJtcGN2Z3NndGdsamhyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEyNjUwMTIsImV4cCI6MjA5Njg0MTAxMn0.Q1R_YACEcp6QQlB5GK8_LAfbpqQn8CsL7VMvDMqBBlo';
+
+const selectStr = `id, proposer_id, receiver_id, offered_item_id, wanted_item_id, status, note, completed_at, created_at, updated_at,
+offered_item:listings!offered_item_id(id, seller_id, name, brand, size, description, price, images, category, condition, status, created_at, listing_lat, listing_lng),
+wanted_item:listings!wanted_item_id(id, seller_id, name, brand, size, description, price, images, category, condition, status, created_at, listing_lat, listing_lng),
+proposer:profiles!proposer_id(id, name, handle, avatar_url, rating, review_count),
+receiver:profiles!receiver_id(id, name, handle, avatar_url, rating, review_count)`;
+
+const testUrl = new URL(`${SUPABASE_URL}/rest/v1/swap_proposals?select=${encodeURIComponent(selectStr.replace(/\n/g, ''))}&limit=1`);
+
+const options = {
+  hostname: testUrl.hostname,
+  path: testUrl.pathname + testUrl.search,
+  method: 'GET',
+  headers: {
+    'apikey': ANON_KEY,
+    'Authorization': `Bearer ${ANON_KEY}`,
+  }
+};
+
+const req = https.request(options, (res) => {
+  let data = '';
+  res.on('data', (chunk) => data += chunk);
+  res.on('end', () => {
+    console.log('Status:', res.statusCode);
+    console.log('Response:', data);
+  });
+});
+
+req.on('error', (err) => {
+  console.error('Error:', err.message);
+});
+
+req.end();
