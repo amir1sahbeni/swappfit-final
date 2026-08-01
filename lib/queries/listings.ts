@@ -100,7 +100,7 @@ export async function getListingById(id: string): Promise<Listing | null> {
   const { data, error } = await supabase
     .from('listings')
     .select(`
-      id, seller_id, name, brand, size, description, price, images, category, condition, color, status, created_at, updated_at, listing_lat, listing_lng, size_type, gender,
+      id, seller_id, name, brand, size, description, price, images, category, condition, status, created_at, updated_at,
       profiles ( id, name, handle, avatar_url, location, governorate, city, location_sharing_enabled, precise_lat, precise_lng )
     `)
     .eq('id', id)
@@ -115,13 +115,12 @@ export async function getUserListings(userId: string): Promise<Listing[]> {
   const { data, error } = await supabase
     .from('listings')
     .select(`
-      id, seller_id, name, brand, size, description, price, images, category, condition, color, status, created_at, updated_at, listing_lat, listing_lng, size_type, gender,
+      id, seller_id, name, brand, size, description, price, images, category, condition, status, created_at, updated_at,
       profiles ( id, name, handle, avatar_url, location, governorate, city, location_sharing_enabled, precise_lat, precise_lng )
     `)
     .eq('seller_id', userId)
     .eq('status', 'active')
     .order('created_at', { ascending: false })
-    .limit(100)
 
   if (error) return []
   return data as Listing[]
