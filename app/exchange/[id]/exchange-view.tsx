@@ -73,11 +73,12 @@ export function ExchangeView({
       if (newStatus === 'declined') {
         router.replace('/')
       } else {
-        router.replace(`/exchange/${proposal.id}`)
+        router.refresh() // Force UI update
       }
     } catch (err: any) {
       setActionError(tv("somethingWentWrong"))
-      setIsUpdating(false)
+    } finally {
+      setIsUpdating(false) // Always reset loading state
     }
   }
 
@@ -90,13 +91,13 @@ export function ExchangeView({
         router.replace('/')
       } else {
         setActionError(res.error ? tErr(res.error) : tv("failedToCancel"))
-        setIsCancelling(false)
         setCancelConfirm(false)
       }
     } catch (err: any) {
       setActionError(err.message || "Something went wrong")
-      setIsCancelling(false)
       setCancelConfirm(false)
+    } finally {
+      setIsCancelling(false) // Always reset loading state
     }
   }
 
