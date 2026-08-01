@@ -3,6 +3,7 @@
 import { createServerClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
+import { sendPushToUser } from '@/lib/webpush'
 
 // ─────────────────────────────────────────────
 // CREATE PURCHASE
@@ -91,6 +92,9 @@ export async function createPurchase(listingId: string): Promise<{ success: bool
     })
 
   // 6. Notify seller
+  const { data: buyerProfile } = await supabase.from('profiles').select('name').eq('id', user.id).single()
+  const buyerName = buyerProfile?.name || 'Someone'
+
   await supabase.from('notifications').insert({
     user_id: listing.seller_id,
     type: 'purchase_request',
@@ -101,24 +105,7 @@ export async function createPurchase(listingId: string): Promise<{ success: bool
     read: false
   })
 
-  // 7. Find or create conversation
-  const { data: existingConv } = await supabase
-    .from('conversations')
-    .select('id')
-    .or(`and(participant_a.eq.${user.id},participant_b.eq.${listing.seller_id}),and(participant_a.eq.${listing.seller_id},participant_b.eq.${user.id})`)
-    .limit(1)
-    .maybeSingle()
-
-  if (!existingConv) {
-    await supabase
-      .from('conversations')
-      .insert({
-        participant_a: user.id,
-        participant_b: listing.seller_id,
-        last_message: 'Purchase request sent',
-        last_message_at: new Date().toISOString()
-      })
-  }
+  await sendPushToUser(supabase, listing.seller_id, buyerName, `${buyerName} wants to buy your ${listing.name}`, `/purchase/${purchase.id}`)
 
   revalidatePath('/')
   return { success: true, purchaseId: purchase.id }
@@ -225,6 +212,9 @@ export async function acceptPurchase(purchaseId: string): Promise<{ success: boo
   }
 
   // 5. Notify buyer
+  const { data: sellerAccProfile } = await supabase.from('profiles').select('name').eq('id', user.id).single()
+  const sellerAccName = sellerAccProfile?.name || 'Someone'
+
   await supabase.from('notifications').insert({
     user_id: purchase.buyer_id,
     type: 'purchase_accepted',
@@ -234,6 +224,8 @@ export async function acceptPurchase(purchaseId: string): Promise<{ success: boo
     text: JSON.stringify({ itemName: purchase.purchase_items?.[0]?.item?.name || 'Item' }),
     read: false
   })
+
+  await sendPushToUser(supabase, purchase.buyer_id, sellerAccName, `${sellerAccName} accepted your purchase offer`, `/purchase/${purchaseId}`)
 
   revalidatePath(`/purchase/${purchaseId}`)
   revalidatePath('/')
@@ -271,6 +263,9 @@ export async function rejectPurchase(purchaseId: string): Promise<{ success: boo
 
   // Listing stays active — other buyers still have pending purchases
 
+  const { data: sellerRejProfile } = await supabase.from('profiles').select('name').eq('id', user.id).single()
+  const sellerRejName = sellerRejProfile?.name || 'Someone'
+
   await supabase.from('notifications').insert({
     user_id: purchase.buyer_id,
     type: 'purchase_rejected',
@@ -280,6 +275,8 @@ export async function rejectPurchase(purchaseId: string): Promise<{ success: boo
     text: JSON.stringify({ itemName: purchase.purchase_items?.[0]?.item?.name || 'Item' }),
     read: false
   })
+
+  await sendPushToUser(supabase, purchase.buyer_id, sellerRejName, `${sellerRejName} declined your purchase offer`, `/swaps`)
 
   revalidatePath(`/purchase/${purchaseId}`)
   return { success: true }
@@ -332,6 +329,9 @@ export async function cancelPurchase(purchaseId: string): Promise<{ success: boo
   }
 
   // Notify seller
+  const { data: buyerCancelProfile } = await supabase.from('profiles').select('name').eq('id', user.id).single()
+  const buyerCancelName = buyerCancelProfile?.name || 'Someone'
+
   await supabase.from('notifications').insert({
     user_id: purchase.seller_id,
     type: 'purchase_cancelled',
@@ -341,6 +341,8 @@ export async function cancelPurchase(purchaseId: string): Promise<{ success: boo
     text: JSON.stringify({ itemName: purchase.purchase_items?.[0]?.item?.name || 'Item', wasAccepted }),
     read: false
   })
+
+  await sendPushToUser(supabase, purchase.seller_id, buyerCancelName, `${buyerCancelName} cancelled the purchase`, `/purchase/${purchaseId}`)
 
   revalidatePath(`/purchase/${purchaseId}`)
   revalidatePath('/')
@@ -414,6 +416,13 @@ export async function completePurchase(purchaseId: string): Promise<{ success: b
       read: false
     }
   ])
+
+  // Fetch buyer name for push
+  const { data: buyerComplProfile } = await supabase.from('profiles').select('name').eq('id', user.id).single()
+  const buyerComplName = buyerComplProfile?.name || 'Someone'
+  const itemNameStr = purchase.purchase_items?.[0]?.item?.name || 'item'
+
+  await sendPushToUser(supabase, purchase.seller_id, buyerComplName, `${buyerComplName} received your ${itemNameStr}. Purchase complete!`, `/purchase/${purchaseId}`)
 
   revalidatePath(`/purchase/${purchaseId}`)
   revalidatePath('/')

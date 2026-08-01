@@ -102,6 +102,11 @@ export default function NotificationsPage() {
         case 'swap_cancelled':
           return t('swap_cancelled', { wantedItemName: data.wantedItemName || 'Item' })
           
+        case 'new_follower':
+          return t('new_follower')
+        case 'rating':
+          return t('rating_received', { rating: data.rating })
+          
         default:
           return notif.text
       }

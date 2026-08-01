@@ -2,13 +2,13 @@
 
 import { useState, useRef, useEffect, useLayoutEffect } from "react"
 import { useRouter } from "next/navigation"
-import { ChevronLeft, Send, Loader2, Reply, Smile, Trash2, Copy, AlertTriangle, X, Camera, Image as ImageIcon, Heart } from "lucide-react"
+import { ChevronLeft, Send, Loader2, Reply, Trash2, Copy, AlertTriangle, X, Image as ImageIcon } from "lucide-react"
 import type { Profile, Message } from "@/lib/types"
 import { createClient } from "@/lib/supabase/client"
 import { UserAvatar } from "@/components/user-avatar"
 import { formatMessageTime, storageUrl, getTimeAgo } from "@/lib/utils"
 import { compressImage } from "@/lib/utils/compressImage"
-import { sendPushNotification } from "@/lib/push-notifications"
+import { notifyNewMessage } from "@/app/actions/messages"
 import { useTranslations } from 'next-intl'
 
 const formatClusterTime = (dateString: string) => {
@@ -75,7 +75,6 @@ export function ChatView({
         const newMessage = payload.new as Message
         if (newMessage.sender_id !== currentUserId) {
           setMessages(prev => {
-            // Prevent duplicates
             if (prev.some(m => m.id === newMessage.id)) return prev
             return [...prev, newMessage]
           })
@@ -96,7 +95,6 @@ export function ChatView({
     }
   }, [conversationId, currentUserId])
 
-  // Scroll to bottom - useLayoutEffect for initial load to prevent visible scroll animation
   useLayoutEffect(() => {
     if (bottomRef.current) {
       bottomRef.current.scrollIntoView({ behavior: isInitialLoad ? "auto" : "smooth" })
@@ -106,12 +104,10 @@ export function ChatView({
     }
   }, [messages, isInitialLoad])
 
-  // Mark messages as read when viewing the chat
   useEffect(() => {
     if (!conversationId) return
 
     const markAsRead = async () => {
-      // Mark all unread messages from the other user as read
       const unreadMessages = messages.filter(
         m => m.sender_id !== currentUserId && !m.read_at
       )
@@ -128,7 +124,6 @@ export function ChatView({
   }, [conversationId, messages, currentUserId, supabase])
 
   const handlePointerDown = (msg: Message, e: React.PointerEvent) => {
-    // Only react to primary pointer (left click / touch)
     if (e.button !== 0 && e.pointerType === 'mouse') return
     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
     const centerY = rect.top + rect.height / 2
@@ -144,7 +139,6 @@ export function ChatView({
     if (pressTimer.current && isPressing.current) {
       clearTimeout(pressTimer.current)
       isPressing.current = false
-      // It was a short tap
       if (!activeMessage) {
         setToggledMessageId(prev => prev === msg.id ? null : msg.id)
       }
@@ -185,7 +179,6 @@ export function ChatView({
           
         if (convErr) throw convErr
         activeConvId = conv.id
-        
         router.refresh()
       } else {
         await supabase
@@ -199,8 +192,6 @@ export function ChatView({
         sender_id: currentUserId,
         text: content,
       }
-      // Only include reply_to_message_id when actually replying;
-      // passing undefined/null can cause FK validation errors on some Supabase versions.
       if (currentReplyId) {
         msgPayload.reply_to_message_id = currentReplyId
       }
@@ -215,21 +206,13 @@ export function ChatView({
 
       setMessages(prev => [...prev, msg as Message])
 
-      // Send push notification (stub - requires native app setup)
-      await sendPushNotification({
-        recipientId: partner.id,
-        title: `New message from ${partner.name}`,
-        body: content.length > 100 ? content.substring(0, 100) + '...' : content,
-        data: {
-          conversationId: activeConvId,
-          messageId: msg.id,
-          senderId: currentUserId
-        }
-      })
+      await notifyNewMessage(
+        partner.id,
+        content.length > 50 ? content.substring(0, 50) + '...' : content,
+        `/chats/${currentUserId}`
+      )
 
     } catch (err: any) {
-      // PostgrestError properties are non-enumerable so console.error(err) shows {}.
-      // Log the real fields explicitly.
       console.error('handleSend error:', err?.message ?? err, '| code:', err?.code, '| details:', err?.details)
     } finally {
       setIsSending(false)
@@ -296,18 +279,11 @@ export function ChatView({
       setMessages(prev => [...prev, msg as Message])
       setReplyingTo(null)
 
-      // Send push notification (stub - requires native app setup)
-      await sendPushNotification({
-        recipientId: partner.id,
-        title: `New image from ${partner.name}`,
-        body: 'Sent you an image',
-        data: {
-          conversationId: activeConvId,
-          messageId: msg.id,
-          senderId: currentUserId,
-          messageType: 'image'
-        }
-      })
+      await notifyNewMessage(
+        partner.id,
+        'Sent you an image',
+        `/chats/${currentUserId}`
+      )
     } catch (err: any) {
       console.error('handleImageUpload error:', err?.message ?? err, '| code:', err?.code)
       alert(`${t('failedToUploadImage')}: ${err?.message ?? 'Unknown error'}`)
@@ -317,7 +293,6 @@ export function ChatView({
     }
   }
 
-  // Delete for me: single atomic UPDATE via RPC — no client-side read-modify-write race
   const handleDeleteForMe = async (msgId: string) => {
     setActiveMessage(null)
     try {
@@ -335,7 +310,6 @@ export function ChatView({
     }
   }
 
-  // Delete for everyone: sets deleted_at, hides message for all participants
   const handleDeleteForEveryone = async (msgId: string) => {
     setActiveMessage(null)
     try {
@@ -353,8 +327,6 @@ export function ChatView({
     if (!msg) return
     const reactions = { ...(msg.reactions || {}) }
     
-    // If the user already reacted with this emoji, toggle it off
-    // Otherwise set their reaction to this new emoji (replacing any previous one)
     if (reactions[currentUserId] === emoji) {
       delete reactions[currentUserId]
     } else {
@@ -414,7 +386,6 @@ export function ChatView({
 
           return (
             <div key={msg.id} id={`msg-${msg.id}`} className={`flex flex-col ${isMine ? "items-end" : "items-start"} ${isConsecutive ? 'mt-1' : 'mt-4'}`}>
-              {/* Timestamp above first message in cluster */}
               {(i === 0 || new Date(msg.created_at).getTime() - new Date(validMessages[i - 1].created_at).getTime() > 5 * 60000) && (
                 <div className="my-2 text-center text-[10px] font-medium text-muted-foreground w-full">
                   {formatClusterTime(msg.created_at)}
@@ -465,7 +436,6 @@ export function ChatView({
                     <span className="text-[11px] text-muted-foreground ml-1 mb-1">{partner.name}</span>
                   )}
 
-                  {/* Facebook-style reply shadow — shows the message being replied to above the reply */}
                   {replyMsg && (
                     <div
                       onClick={() => {
@@ -478,9 +448,7 @@ export function ChatView({
                           }, 2000)
                         }
                       }}
-                      className={`scale-95 origin-top cursor-pointer ${
-                        isMine ? 'self-end' : 'self-start'
-                      }`}
+                      className={`scale-95 origin-top cursor-pointer ${isMine ? 'self-end' : 'self-start'}`}
                     >
                       <div
                         className={`rounded-2xl text-sm relative opacity-40 ${
@@ -498,7 +466,6 @@ export function ChatView({
                     </div>
                   )}
 
-                  {/* Message bubble */}
                   <div
                     className={`rounded-2xl text-sm relative ${
                       isMine
@@ -526,9 +493,9 @@ export function ChatView({
                         {Object.entries(
                           Object.entries(msg.reactions).reduce((acc: Record<string, number>, [k, v]) => {
                             if (typeof v === 'number') {
-                              acc[k] = (acc[k] || 0) + v // Legacy format
+                              acc[k] = (acc[k] || 0) + v
                             } else if (typeof v === 'string') {
-                              acc[v] = (acc[v] || 0) + 1 // New format (k=userId, v=emoji)
+                              acc[v] = (acc[v] || 0) + 1
                             }
                             return acc
                           }, {})
@@ -541,22 +508,18 @@ export function ChatView({
                   
                   {activeMessage?.id === msg.id && (
                     <div className={`absolute ${activeMessagePosition === 'bottom' ? 'bottom-full mb-16' : 'top-full mt-16'} ${isMine ? 'right-0' : 'left-0'} w-52 bg-card border border-border shadow-xl rounded-2xl flex flex-col overflow-hidden z-[70] animate-in zoom-in-95 fade-in duration-200`}>
-                      {/* Reply */}
                       <button onClick={(e) => { e.stopPropagation(); setReplyingTo(msg); setActiveMessage(null) }} className="flex items-center justify-between p-3 text-sm hover:bg-muted active:bg-muted transition-colors">
                         <span className="font-medium">{t('reply')}</span> <Reply className="h-4 w-4 text-muted-foreground" />
                       </button>
                       <div className="h-px w-full bg-border" />
-                      {/* Copy */}
                       <button onClick={(e) => { e.stopPropagation(); handleCopy(msg.text) }} className="flex items-center justify-between p-3 text-sm hover:bg-muted active:bg-muted transition-colors">
                         <span className="font-medium">{t('copyText')}</span> <Copy className="h-4 w-4 text-muted-foreground" />
                       </button>
                       <div className="h-px w-full bg-border" />
-                      {/* Delete for me — always available on any message */}
                       <button onClick={(e) => { e.stopPropagation(); handleDeleteForMe(msg.id) }} className="flex items-center justify-between p-3 text-sm hover:bg-muted active:bg-muted transition-colors">
                         <span className="font-medium text-foreground">{t('deleteForMe')}</span>
                         <Trash2 className="h-4 w-4 text-muted-foreground" />
                       </button>
-                      {/* Delete for everyone — only sender can do this */}
                       {isMine && (
                         <>
                           <div className="h-px w-full bg-border" />
@@ -566,7 +529,6 @@ export function ChatView({
                           </button>
                         </>
                       )}
-                      {/* Report — only for partner's messages */}
                       {!isMine && (
                         <>
                           <div className="h-px w-full bg-border" />

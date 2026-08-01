@@ -409,6 +409,8 @@
     "swap_waiting_confirmation": "أكد الاستلام. في انتظار تأكيدك.",
     "swap_declined": "رفض اقتراح المبادلة الخاص بك لـ {wantedItemName}",
     "swap_cancelled": "ألغى المبادلة المتعلقة بـ {wantedItemName}",
+    "new_follower": "بدأ بمتابعتك",
+    "rating_received": "أعطاك تقييم {rating} نجوم",
     "fallback_purchase": "تحديث بخصوص عملية الشراء الخاصة بك",
     "fallback_swap": "تحديث بخصوص اقتراح المبادلة الخاص بك"
   },

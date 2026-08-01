@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Search, SlidersHorizontal, X, Loader2 } from "lucide-react"
+import { Search, SlidersHorizontal, X, Loader2, Check } from "lucide-react"
 import { BottomNav } from "@/components/bottom-nav"
 import { ItemCard } from "@/components/item-card"
 import { categories } from "@/lib/data"
@@ -10,6 +10,25 @@ import { listingToItem } from "@/lib/utils"
 import type { Item, Profile } from "@/lib/types"
 import Link from "next/link"
 import { useTranslations } from 'next-intl'
+
+const STANDARD_COLORS = [
+  { name: 'Black', hex: '#000000' },
+  { name: 'White', hex: '#FFFFFF' },
+  { name: 'Gray', hex: '#808080' },
+  { name: 'Beige', hex: '#F5F5DC' },
+  { name: 'Brown', hex: '#8B4513' },
+  { name: 'Red', hex: '#FF0000' },
+  { name: 'Pink', hex: '#FFC0CB' },
+  { name: 'Orange', hex: '#FFA500' },
+  { name: 'Yellow', hex: '#FFFF00' },
+  { name: 'Green', hex: '#008000' },
+  { name: 'Blue', hex: '#0000FF' },
+  { name: 'Navy', hex: '#000080' },
+  { name: 'Purple', hex: '#800080' },
+  { name: 'Gold', hex: '#FFD700' },
+  { name: 'Silver', hex: '#C0C0C0' },
+  { name: 'Multicolor', hex: 'conic-gradient(red, yellow, green, blue, purple, red)' }
+] as const;
 
 export default function SearchPage() {
   const t = useTranslations('Search')
@@ -21,7 +40,7 @@ export default function SearchPage() {
   const [activeCategory, setActiveCategory] = useState("All")
   const [activeSize, setActiveSize] = useState("All")
   const [activeBrand, setActiveBrand] = useState("All")
-  const [activeColor, setActiveColor] = useState("All")
+  const [activeColors, setActiveColors] = useState<string[]>([])
   const [minPrice, setMinPrice] = useState(0)
   const [maxPrice, setMaxPrice] = useState(1000)
   const [showFilters, setShowFilters] = useState(false)
@@ -130,8 +149,8 @@ export default function SearchPage() {
           dbQuery = dbQuery.ilike('brand', `%${activeBrand}%`)
         }
 
-        if (activeColor !== 'All') {
-          dbQuery = dbQuery.eq('color', activeColor)
+        if (activeColors.length > 0) {
+          dbQuery = dbQuery.in('color', activeColors)
         }
 
         if (minPrice > 0) {
@@ -171,7 +190,7 @@ export default function SearchPage() {
     }, 300)
 
     return () => clearTimeout(timer)
-  }, [query, activeCategory, activeSize, activeBrand, activeColor, minPrice, maxPrice, supabase, searchMode])
+  }, [query, activeCategory, activeSize, activeBrand, activeColors, minPrice, maxPrice, supabase, searchMode])
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && query.trim() !== "") {
@@ -299,16 +318,39 @@ export default function SearchPage() {
           
           <div className="flex flex-col gap-1.5">
             <label className="text-[10px] font-bold uppercase text-muted-foreground">{t('color')}</label>
-            <select
-              value={activeColor}
-              onChange={e => setActiveColor(e.target.value)}
-              className="w-full bg-muted rounded-xl px-3 py-2 text-sm text-foreground outline-none border-r-8 border-transparent"
-            >
-              <option value="All">{tCat('All')}</option>
-              {(['Black', 'White', 'Gray', 'Red', 'Orange', 'Yellow', 'Green', 'Blue', 'Purple', 'Pink', 'Brown', 'Beige', 'Navy', 'Multicolor'] as const).map(color => (
-                <option key={color} value={color}>{tColors(color)}</option>
-              ))}
-            </select>
+            <div className="hide-scrollbar -mx-4 flex gap-3 overflow-x-auto px-4 pb-2">
+              {STANDARD_COLORS.map((c) => {
+                const isSelected = activeColors.includes(c.name);
+                return (
+                  <button
+                    key={c.name}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      if (isSelected) {
+                        setActiveColors(prev => prev.filter(color => color !== c.name));
+                      } else {
+                        setActiveColors(prev => [...prev, c.name]);
+                      }
+                    }}
+                    className="flex flex-col items-center gap-1.5 shrink-0"
+                  >
+                    <div 
+                      className={`flex h-7 w-7 items-center justify-center rounded-full transition-all ${
+                        isSelected ? 'ring-2 ring-primary ring-offset-2 ring-offset-background border-primary' : 'border border-border/50'
+                      }`}
+                      style={{ background: c.hex }}
+                    >
+                      {isSelected && (
+                        <Check className={`h-4 w-4 ${c.name === 'White' || c.name === 'Beige' || c.name === 'Silver' ? 'text-black' : 'text-white'}`} />
+                      )}
+                    </div>
+                    <span className={`text-[10px] font-medium ${isSelected ? 'text-foreground' : 'text-muted-foreground'}`}>
+                      {tColors(c.name as any)}
+                    </span>
+                  </button>
+                )
+              })}
+            </div>
           </div>
 
           <div className="flex flex-col gap-1.5">
@@ -357,23 +399,47 @@ export default function SearchPage() {
 
       {/* Category pills - only for items mode */}
       {searchMode === "items" && (
-        <div className="hide-scrollbar -mx-5 mt-4 flex gap-2.5 overflow-x-auto px-5">
-          {categories.map((cat) => {
-            const active = cat === activeCategory
-            return (
-              <button
-                key={cat}
-                onClick={() => { setActiveCategory(cat); setActiveSize("All"); }}
-                className={`shrink-0 rounded-full px-4 py-2 text-sm font-medium transition-transform active:scale-95 ${
-                  active
-                    ? "bg-brand-gradient text-primary-foreground shadow-[0_8px_18px_rgba(192,57,91,0.22)]"
-                    : "border border-secondary bg-transparent text-foreground"
-                }`}
-              >
-                {tCat(cat as any)}
-              </button>
-            )
-          })}
+        <div className="flex flex-col gap-3 mt-4">
+          <div className="hide-scrollbar -mx-5 flex gap-2.5 overflow-x-auto px-5">
+            {categories.map((cat) => {
+              const active = cat === activeCategory
+              return (
+                <button
+                  key={cat}
+                  onClick={() => { setActiveCategory(cat); setActiveSize("All"); }}
+                  className={`shrink-0 rounded-full px-4 py-2 text-sm font-medium transition-transform active:scale-95 ${
+                    active
+                      ? "bg-brand-gradient text-primary-foreground shadow-[0_8px_18px_rgba(192,57,91,0.22)]"
+                      : "border border-secondary bg-transparent text-foreground"
+                  }`}
+                >
+                  {tCat(cat as any)}
+                </button>
+              )
+            })}
+          </div>
+          
+          {/* Active Colors Bar */}
+          {activeColors.length > 0 && (
+            <div className="hide-scrollbar -mx-5 flex gap-2.5 overflow-x-auto px-5 items-center">
+              <span className="text-[10px] font-bold uppercase text-muted-foreground mr-1">{t('color')}</span>
+              {activeColors.map(colorName => {
+                const colorDef = STANDARD_COLORS.find(c => c.name === colorName);
+                if (!colorDef) return null;
+                return (
+                  <button
+                    key={colorName}
+                    onClick={() => setActiveColors(prev => prev.filter(c => c !== colorName))}
+                    className="shrink-0 flex items-center gap-1.5 rounded-full px-2 py-1 pr-3 text-xs font-medium border border-primary bg-primary/5 transition-transform active:scale-95"
+                  >
+                    <div className="w-3.5 h-3.5 rounded-full border border-border/50" style={{ background: colorDef.hex }} />
+                    <span className="text-primary">{tColors(colorName as any)}</span>
+                    <X className="h-3 w-3 text-primary ml-0.5" />
+                  </button>
+                )
+              })}
+            </div>
+          )}
         </div>
       )}
 

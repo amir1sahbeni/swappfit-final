@@ -3,6 +3,7 @@
 import { createServerClient } from '@/lib/supabase/server'
 import { redirect, RedirectType } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
+import { sendPushToUser } from '@/lib/webpush'
 
 export async function submitReview(data: {
   revieweeId: string
@@ -49,9 +50,14 @@ export async function submitReview(data: {
     type: 'rating',
     actor_id: user.id,
     entity_id: data.proposalId,
-    text: `left you a ${data.rating}-star review`,
+    text: JSON.stringify({ rating: data.rating }),
     read: false,
   })
+
+  // Push notification
+  const { data: reviewerProfile } = await supabase.from('profiles').select('name').eq('id', user.id).single()
+  const reviewerName = reviewerProfile?.name || 'Someone'
+  await sendPushToUser(supabase, data.revieweeId, reviewerName, `${reviewerName} gave you a ${data.rating} star review`, `/profile`)
 
   revalidatePath(`/user/${data.revieweeId}`)
   revalidatePath('/profile')

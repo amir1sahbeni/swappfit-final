@@ -22,6 +22,9 @@ export function ItemDetailView({ item, seller, initialSaved, isOwner, currentUse
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [viewerOpen, setViewerOpen] = useState(false)
   const [listingStatus, setListingStatus] = useState(item.status || 'active')
+  const [activeImageIndex, setActiveImageIndex] = useState(0)
+  
+  const displayImages = item.images && item.images.length > 0 ? item.images : [item.image || "/placeholder.svg"]
 
   // Zoom and Pan states
   const [scale, setScale] = useState(1)
@@ -118,6 +121,20 @@ export function ItemDetailView({ item, seller, initialSaved, isOwner, currentUse
     }
   }
 
+  function handleScroll(e: React.UIEvent<HTMLDivElement>) {
+    const scrollLeft = e.currentTarget.scrollLeft
+    const width = e.currentTarget.clientWidth
+    const newIndex = Math.round(scrollLeft / width)
+    if (newIndex !== activeImageIndex) {
+      setActiveImageIndex(newIndex)
+      // Reset zoom if swiping to a new image
+      if (scale > 1) {
+        setScale(1)
+        setPan({ x: 0, y: 0 })
+      }
+    }
+  }
+
   // Realtime stale guard: if another buyer purchases/swaps while we're viewing, hide the action buttons
   useEffect(() => {
     const { createClient } = require('@/lib/supabase/client')
@@ -202,30 +219,53 @@ export function ItemDetailView({ item, seller, initialSaved, isOwner, currentUse
   return (
     <main className="mx-auto w-full max-w-[390px] min-h-dvh pb-44">
       {/* Image with floating controls */}
-      <div className="relative overflow-hidden">
-        {/* Bug 8: tapping image opens fullscreen viewer */}
-        <button
-          onClick={() => {
-            if (scale === 1) setViewerOpen(true)
-          }}
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
-          onTouchCancel={handleTouchEnd}
-          className="block w-full text-left relative aspect-square transition-transform duration-100 ease-out"
-          style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${scale})`, touchAction: scale > 1 ? 'none' : 'auto' }}
-          aria-label="View full image"
-          data-no-swipe="true"
+      <div className="relative overflow-hidden bg-black" data-no-swipe="true">
+        <div 
+          className="flex overflow-x-auto snap-x snap-mandatory hide-scrollbar relative aspect-square"
+          onScroll={handleScroll}
         >
-          <Image
-            src={item.image || "/placeholder.svg"}
-            alt={item.name}
-            fill
-            sizes="(max-width: 768px) 100vw, 50vw"
-            priority={true}
-            className="object-cover no-rtl-flip pointer-events-none"
-          />
-        </button>
+          {displayImages.map((img, i) => (
+            <div key={i} className="min-w-full snap-center shrink-0 flex items-center justify-center">
+              <button
+                onClick={() => {
+                  if (scale === 1) setViewerOpen(true)
+                }}
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
+                onTouchCancel={handleTouchEnd}
+                className="block w-full h-full text-left relative transition-transform duration-100 ease-out"
+                style={{ 
+                  transform: i === activeImageIndex ? `translate(${pan.x}px, ${pan.y}px) scale(${scale})` : 'none', 
+                  touchAction: (i === activeImageIndex && scale > 1) ? 'none' : 'pan-x pan-y' 
+                }}
+                aria-label={`View image ${i + 1}`}
+              >
+                <Image
+                  src={img}
+                  alt={`${item.name} - Image ${i + 1}`}
+                  fill
+                  sizes="(max-width: 768px) 100vw, 50vw"
+                  priority={i === 0}
+                  className="object-cover no-rtl-flip pointer-events-none"
+                />
+              </button>
+            </div>
+          ))}
+        </div>
+
+        {/* Dot Indicators */}
+        {displayImages.length > 1 && (
+          <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-1.5 z-10 pointer-events-none">
+            {displayImages.map((_, i) => (
+              <div 
+                key={i} 
+                className={`rounded-full transition-all duration-300 ${i === activeImageIndex ? 'bg-white w-2 h-2' : 'bg-white/50 w-1.5 h-1.5'}`} 
+              />
+            ))}
+          </div>
+        )}
+
         <button
           aria-label="Go back"
           onClick={() => router.back()}
@@ -417,19 +457,25 @@ export function ItemDetailView({ item, seller, initialSaved, isOwner, currentUse
         >
           <button
             onClick={() => setViewerOpen(false)}
-            className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full bg-white/20 text-white backdrop-blur transition-transform active:scale-90"
+            className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full bg-white/20 text-white backdrop-blur transition-transform active:scale-90 z-10"
             aria-label="Close viewer"
           >
             <X className="h-5 w-5" />
           </button>
-          <div className="relative w-[95vw] h-[85vh] max-w-4xl">
-            <Image
-              src={item.image || "/placeholder.svg"}
-              alt={item.name}
-              fill
-              className="rounded-2xl object-contain shadow-2xl no-rtl-flip"
-              onClick={(e) => e.stopPropagation()}
-            />
+          
+          <div className="flex w-full h-full overflow-x-auto snap-x snap-mandatory hide-scrollbar">
+            {displayImages.map((img, i) => (
+              <div key={i} className="min-w-full snap-center shrink-0 flex items-center justify-center p-4 relative" onClick={(e) => e.stopPropagation()}>
+                <div className="relative w-full h-full max-w-4xl">
+                  <Image
+                    src={img}
+                    alt={`${item.name} - Image ${i + 1}`}
+                    fill
+                    className="object-contain no-rtl-flip"
+                  />
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       )}

@@ -409,6 +409,8 @@
     "swap_waiting_confirmation": "confirmed receipt. Waiting for your confirmation.",
     "swap_declined": "declined your swap proposal for {wantedItemName}",
     "swap_cancelled": "cancelled the swap involving {wantedItemName}",
+    "new_follower": "started following you",
+    "rating_received": "gave you a {rating} star review",
     "fallback_purchase": "Update on your purchase",
     "fallback_swap": "Update on your swap proposal"
   },

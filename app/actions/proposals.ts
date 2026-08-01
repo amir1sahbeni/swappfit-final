@@ -3,6 +3,7 @@
 import { createServerClient } from '@/lib/supabase/server'
 import { redirect, RedirectType } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
+import { sendPushToUser } from '@/lib/webpush'
 
 // ─────────────────────────────────────────────
 // SEND PROPOSAL
@@ -102,30 +103,11 @@ export async function sendProposal(data: {
   ]
   await supabase.from('swap_proposal_items').insert(proposalItems)
 
-  // ── Find or create conversation ──
-  const { data: existing } = await supabase
-    .from('conversations')
-    .select('id')
-    .or(
-      `and(participant_a.eq.${user.id},participant_b.eq.${data.receiverId}),and(participant_a.eq.${data.receiverId},participant_b.eq.${user.id})`
-    )
-    .limit(1)
-    .maybeSingle()
-
-  if (!existing?.id) {
-    await supabase
-      .from('conversations')
-      .insert({
-        participant_a: user.id,
-        participant_b: data.receiverId,
-        listing_id: data.wantedItemIds[0],
-        proposal_id: proposal.id,
-        last_message: 'Swap proposed',
-        last_message_at: new Date().toISOString(),
-      })
-  }
-
   // ── Notifications ──
+  // Fetch proposer profile for push title
+  const { data: proposerProfile } = await supabase.from('profiles').select('name').eq('id', user.id).single()
+  const proposerName = proposerProfile?.name || 'Someone'
+
   await supabase.from('notifications').insert([
     {
       user_id: data.receiverId,
@@ -145,6 +127,9 @@ export async function sendProposal(data: {
       read: false,
     },
   ])
+
+  // Push to receiver
+  await sendPushToUser(supabase, data.receiverId, proposerName, `${proposerName} wants to swap with you`, `/exchange/${proposal.id}`)
 
   return { success: true, proposalId: proposal.id }
 }
@@ -240,6 +225,9 @@ export async function updateProposalStatus(
     }
 
     // Notify proposer of acceptance
+    const { data: receiverProfile } = await supabase.from('profiles').select('name').eq('id', proposal.receiver_id).single()
+    const receiverName = receiverProfile?.name || 'Someone'
+
     await supabase.from('notifications').insert([
       {
         user_id: proposal.proposer_id,
@@ -261,6 +249,9 @@ export async function updateProposalStatus(
       },
     ])
 
+    // Push to proposer
+    await sendPushToUser(supabase, proposal.proposer_id, receiverName, `${receiverName} accepted your swap proposal`, `/exchange/${proposalId}`)
+
   } else if (status === 'declined') {
     const { error } = await supabase
       .from('swap_proposals')
@@ -268,6 +259,10 @@ export async function updateProposalStatus(
       .eq('id', proposalId)
 
     if (error) throw new Error('FAILED_TO_DECLINE')
+
+    // Notify proposer of decline
+    const { data: receiverProfileD } = await supabase.from('profiles').select('name').eq('id', proposal.receiver_id).single()
+    const receiverNameD = receiverProfileD?.name || 'Someone'
 
     await supabase.from('notifications').insert({
       user_id: proposal.proposer_id,
@@ -278,6 +273,8 @@ export async function updateProposalStatus(
       text: JSON.stringify({ wantedItemName: proposal.wanted_item?.name || 'Item', offeredItemName: proposal.offered_item?.name || 'Item' }),
       read: false,
     })
+
+    await sendPushToUser(supabase, proposal.proposer_id, receiverNameD, `${receiverNameD} declined your swap proposal`, `/swaps`)
 
   } else if (status === 'completed') {
     // Two-sided confirmation — cannot be triggered once already completed
@@ -332,6 +329,9 @@ export async function updateProposalStatus(
       ])
     } else {
       const otherUserId = isProposer ? proposal.receiver_id : proposal.proposer_id
+      const { data: confirmProfile } = await supabase.from('profiles').select('name').eq('id', user.id).single()
+      const confirmName = confirmProfile?.name || 'Someone'
+
       await supabase.from('notifications').insert({
         user_id: otherUserId,
         type: 'swap_completed',
@@ -341,6 +341,8 @@ export async function updateProposalStatus(
         text: JSON.stringify({ wantedItemName: proposal.wanted_item?.name || 'Item', offeredItemName: proposal.offered_item?.name || 'Item', waitingForOther: true }),
         read: false,
       })
+
+      await sendPushToUser(supabase, otherUserId, confirmName, `${confirmName} confirmed receipt. Waiting for your confirmation.`, `/exchange/${proposalId}`)
     }
 
     const { error } = await supabase
@@ -400,7 +402,10 @@ export async function cancelProposal(
       .in('id', allItemIds)
   }
 
-  // Notify receiver
+  // Notify receiver of cancellation
+  const { data: proposerProfile2 } = await supabase.from('profiles').select('name').eq('id', user.id).single()
+  const proposerName2 = proposerProfile2?.name || 'Someone'
+
   await supabase.from('notifications').insert({
     user_id: proposal.receiver_id,
     type: 'swap_cancelled',
@@ -410,6 +415,8 @@ export async function cancelProposal(
     text: JSON.stringify({ wantedItemName: proposal.wanted_item?.name || 'Item', offeredItemName: proposal.offered_item?.name || 'Item', wasAccepted }),
     read: false,
   })
+
+  await sendPushToUser(supabase, proposal.receiver_id, proposerName2, `${proposerName2} cancelled the swap`, `/swaps`)
 
   revalidatePath(`/exchange/${proposalId}`)
   revalidatePath('/swaps')

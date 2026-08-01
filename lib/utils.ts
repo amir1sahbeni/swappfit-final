@@ -89,6 +89,7 @@ export function listingToItem(listing: Listing, currentUserProfile?: Profile | n
     name: listing.name,
     price: formatPrice(listing.price),
     image: listing.images?.[0] ?? '',
+    images: listing.images ?? [],
     category: listing.category,
     condition: listing.condition,
     brand: listing.brand,

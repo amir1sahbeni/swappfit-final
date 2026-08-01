@@ -41,6 +41,7 @@ import { AppProvider } from '@/components/app-context'
 import { NextIntlClientProvider } from 'next-intl'
 import { getMessages, getLocale } from 'next-intl/server'
 import { SwipeHandler } from '@/components/swipe-handler'
+import { PushProvider } from '@/components/push-provider'
 
 export default async function RootLayout({
   children,
@@ -57,6 +58,7 @@ export default async function RootLayout({
           <ThemeProvider>
             <AppProvider>
               <SwipeHandler />
+              <PushProvider />
               <div className="pb-20">
                 {children}
               </div>

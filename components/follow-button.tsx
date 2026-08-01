@@ -23,27 +23,15 @@ export function FollowButton({
     if (loading) return
     setLoading(true)
 
-    const supabase = createClient()
-
     try {
-      if (isFollowing) {
-        const { error } = await supabase
-          .from('follows')
-          .delete()
-          .eq('follower_id', followerId)
-          .eq('following_id', followingId)
-          
-        if (error) throw new Error(error.message)
-        setIsFollowing(false)
+      const { toggleFollow } = await import('@/app/actions/follows')
+      const result = await toggleFollow(followingId, isFollowing)
+      
+      if (result.success) {
+        setIsFollowing(!isFollowing)
       } else {
-        const { error } = await supabase
-          .from('follows')
-          .insert({ follower_id: followerId, following_id: followingId })
-          
-        if (error) throw new Error(error.message)
-        setIsFollowing(true)
+        alert("Failed to update follow status: " + (result.error || "Unknown error"))
       }
-      router.refresh()
     } catch (err: any) {
       console.error("Follow error:", err)
       alert("Failed to update follow status: " + (err.message || "Unknown error"))

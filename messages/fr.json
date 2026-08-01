@@ -409,6 +409,8 @@
     "swap_waiting_confirmation": "a confirmé la réception. En attente de votre confirmation.",
     "swap_declined": "a décliné votre proposition d'échange pour {wantedItemName}",
     "swap_cancelled": "a annulé l'échange pour {wantedItemName}",
+    "new_follower": "a commencé à vous suivre",
+    "rating_received": "vous a laissé un avis de {rating} étoiles",
     "fallback_purchase": "Mise à jour concernant votre achat",
     "fallback_swap": "Mise à jour concernant votre échange"
   },

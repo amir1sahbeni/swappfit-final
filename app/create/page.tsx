@@ -16,6 +16,25 @@ const MAX_PHOTOS = 5
 const conditions = ["New", "Like New", "Excellent", "Good", "Fair"]
 const formCategories = categories.filter((c) => c !== "All")
 
+const STANDARD_COLORS = [
+  { name: 'Black', hex: '#000000' },
+  { name: 'White', hex: '#FFFFFF' },
+  { name: 'Gray', hex: '#808080' },
+  { name: 'Beige', hex: '#F5F5DC' },
+  { name: 'Brown', hex: '#8B4513' },
+  { name: 'Red', hex: '#FF0000' },
+  { name: 'Pink', hex: '#FFC0CB' },
+  { name: 'Orange', hex: '#FFA500' },
+  { name: 'Yellow', hex: '#FFFF00' },
+  { name: 'Green', hex: '#008000' },
+  { name: 'Blue', hex: '#0000FF' },
+  { name: 'Navy', hex: '#000080' },
+  { name: 'Purple', hex: '#800080' },
+  { name: 'Gold', hex: '#FFD700' },
+  { name: 'Silver', hex: '#C0C0C0' },
+  { name: 'Multicolor', hex: 'conic-gradient(red, yellow, green, blue, purple, red)' }
+] as const;
+
 export default function CreateListingPage() {
   const t = useTranslations('Create')
   const tAuth = useTranslations('Auth')
@@ -193,19 +212,50 @@ export default function CreateListingPage() {
         {atPhotoLimit ? t('photoLimitReached') : t('photoCounter', { count: files.length })}
       </p>
 
-      <div className="mt-3 flex gap-3 overflow-x-auto hide-scrollbar pb-2">
-        {previewUrls.map((url, i) => (
-          <div key={url} className="relative shrink-0">
-            <img src={url} alt="Preview" className="aspect-square w-24 rounded-2xl object-cover border border-border" />
-            <button
-              onClick={() => removeFile(i)}
-              aria-label={t('removePhoto')}
-              className="absolute -top-2 -right-2 flex h-6 w-6 items-center justify-center rounded-full bg-destructive text-destructive-foreground transition-transform active:scale-90"
-            >
-              <X className="h-3 w-3" />
-            </button>
+      <div className="mt-3 flex gap-4 overflow-x-auto hide-scrollbar pb-6 pl-2 pt-2">
+        {previewUrls.length > 0 && (
+          <div 
+            className="relative shrink-0" 
+            style={{ 
+              width: previewUrls.length > 1 ? 96 + (previewUrls.length - 1) * 8 : 96, 
+              height: 96 
+            }}
+          >
+            {/* The stack */}
+            {previewUrls.map((url, i) => (
+              <div 
+                key={url} 
+                className="absolute top-0 left-0 transition-all" 
+                style={{ 
+                  transform: `translate(${i * 8}px, ${i * 8}px)`, 
+                  zIndex: MAX_PHOTOS - i 
+                }}
+              >
+                <img 
+                  src={url} 
+                  alt="Preview" 
+                  className="aspect-square w-24 rounded-2xl object-cover border border-border bg-background shadow-sm" 
+                />
+                <button
+                  onClick={(e) => { e.preventDefault(); removeFile(i); }}
+                  aria-label={t('removePhoto')}
+                  className="absolute -top-2 -right-2 flex h-6 w-6 items-center justify-center rounded-full bg-destructive text-destructive-foreground transition-transform active:scale-90 shadow-sm"
+                  style={{ zIndex: 100 }}
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+            ))}
+            {previewUrls.length > 1 && (
+              <div 
+                className="absolute -bottom-3 left-0 z-[60] rounded-full bg-black/75 px-2 py-0.5 text-[10px] font-bold text-white backdrop-blur"
+                style={{ transform: `translateX(${((previewUrls.length - 1) * 8) / 2}px)` }}
+              >
+                {previewUrls.length} photos
+              </div>
+            )}
           </div>
-        ))}
+        )}
 
         {/* Add photo button — hidden when at limit */}
         {!atPhotoLimit && (
@@ -264,16 +314,32 @@ export default function CreateListingPage() {
         </Field>
 
         <Field label={t('color')}>
-          <select
-            value={color}
-            onChange={(e) => setColor(e.target.value)}
-            className="w-full rounded-xl bg-muted px-4 py-3 text-sm text-foreground outline-none border-r-8 border-transparent focus:ring-2 focus:ring-ring"
-          >
-            <option value="" disabled>{t('placeholderColor')}</option>
-            {(['Black', 'White', 'Gray', 'Red', 'Orange', 'Yellow', 'Green', 'Blue', 'Purple', 'Pink', 'Brown', 'Beige', 'Navy', 'Multicolor'] as const).map(c => (
-              <option key={c} value={c}>{tColors(c)}</option>
-            ))}
-          </select>
+          <div className="hide-scrollbar -mx-5 flex gap-4 overflow-x-auto px-5 pb-2">
+            {STANDARD_COLORS.map((c) => {
+              const isSelected = color === c.name;
+              return (
+                <button
+                  key={c.name}
+                  onClick={(e) => { e.preventDefault(); setColor(c.name); }}
+                  className="flex flex-col items-center gap-1.5 shrink-0"
+                >
+                  <div 
+                    className={`flex h-7 w-7 items-center justify-center rounded-full transition-all ${
+                      isSelected ? 'ring-2 ring-primary ring-offset-2 ring-offset-background' : 'border border-border/50'
+                    }`}
+                    style={{ background: c.hex }}
+                  >
+                    {isSelected && (
+                      <Check className={`h-4 w-4 ${c.name === 'White' || c.name === 'Beige' || c.name === 'Silver' ? 'text-black' : 'text-white'}`} />
+                    )}
+                  </div>
+                  <span className={`text-[10px] font-medium ${isSelected ? 'text-foreground' : 'text-muted-foreground'}`}>
+                    {tColors(c.name as any)}
+                  </span>
+                </button>
+              )
+            })}
+          </div>
         </Field>
 
         <div className="grid grid-cols-2 gap-4">

@@ -196,6 +196,7 @@ export interface Item {
   name: string
   price: string       // display string e.g. "$128"
   image: string
+  images?: string[]
   category: string
   condition: Condition
   brand: string
