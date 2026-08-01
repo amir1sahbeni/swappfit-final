@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { ChevronLeft, Send, CheckCircle2, Loader2, Lock } from "lucide-react"
+import { ChevronLeft, Send, CheckCircle2, Loader2, Lock, ArrowRightLeft } from "lucide-react"
 import type { Item, Profile } from "@/lib/types"
 import { sendProposal } from "@/app/actions/proposals"
 import { useTranslations } from 'next-intl'
