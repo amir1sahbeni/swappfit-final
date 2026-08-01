@@ -95,15 +95,19 @@ export async function createPurchase(listingId: string): Promise<{ success: bool
   const { data: buyerProfile } = await supabase.from('profiles').select('name').eq('id', user.id).single()
   const buyerName = buyerProfile?.name || 'Someone'
 
-  await supabase.from('notifications').insert({
-    user_id: listing.seller_id,
-    type: 'purchase_request',
-    actor_id: user.id,
-    entity_id: purchase.id,
-    entity_status: 'pending_seller_approval',
-    text: JSON.stringify({ itemName: listing.name }),
-    read: false
-  })
+  try {
+    await supabase.from('notifications').insert({
+      user_id: listing.seller_id,
+      type: 'purchase_request',
+      actor_id: user.id,
+      entity_id: purchase.id,
+      text: JSON.stringify({ itemName: listing.name }),
+      read: false
+    })
+  } catch (notifErr) {
+    console.error('Failed to send notification:', notifErr)
+    // Don't fail the purchase if notification fails
+  }
 
   await sendPushToUser(supabase, listing.seller_id, buyerName, `${buyerName} wants to buy your ${listing.name}`, `/purchase/${purchase.id}`)
 
@@ -177,7 +181,6 @@ export async function acceptPurchase(purchaseId: string): Promise<{ success: boo
             user_id: p.buyer_id,
             type: 'purchase_rejected',
             entity_id: p.id,
-            entity_status: 'cancelled',
             text: JSON.stringify({ itemName: purchase.purchase_items?.[0]?.item?.name || 'Item' }),
             read: false,
           }))
@@ -203,7 +206,6 @@ export async function acceptPurchase(purchaseId: string): Promise<{ success: boo
           user_id: s.proposer_id,
           type: 'swap_declined',
           entity_id: s.id,
-          entity_status: 'declined',
           text: JSON.stringify({ itemName: purchase.purchase_items?.[0]?.item?.name || 'Item' }),
           read: false,
         }))
@@ -220,7 +222,6 @@ export async function acceptPurchase(purchaseId: string): Promise<{ success: boo
     type: 'purchase_accepted',
     actor_id: user.id,
     entity_id: purchaseId,
-    entity_status: 'accepted',
     text: JSON.stringify({ itemName: purchase.purchase_items?.[0]?.item?.name || 'Item' }),
     read: false
   })
@@ -271,7 +272,6 @@ export async function rejectPurchase(purchaseId: string): Promise<{ success: boo
     type: 'purchase_rejected',
     actor_id: user.id,
     entity_id: purchaseId,
-    entity_status: 'cancelled',
     text: JSON.stringify({ itemName: purchase.purchase_items?.[0]?.item?.name || 'Item' }),
     read: false
   })
@@ -337,7 +337,6 @@ export async function cancelPurchase(purchaseId: string): Promise<{ success: boo
     type: 'purchase_cancelled',
     actor_id: user.id,
     entity_id: purchaseId,
-    entity_status: 'cancelled',
     text: JSON.stringify({ itemName: purchase.purchase_items?.[0]?.item?.name || 'Item', wasAccepted }),
     read: false
   })
@@ -402,7 +401,6 @@ export async function completePurchase(purchaseId: string): Promise<{ success: b
       type: 'purchase_completed',
       actor_id: user.id,
       entity_id: purchaseId,
-      entity_status: 'completed',
       text: JSON.stringify({ itemName: purchase.purchase_items?.[0]?.item?.name || 'Item', isSeller: true }),
       read: false
     },
@@ -411,7 +409,6 @@ export async function completePurchase(purchaseId: string): Promise<{ success: b
       type: 'purchase_completed',
       actor_id: purchase.seller_id,
       entity_id: purchaseId,
-      entity_status: 'completed',
       text: JSON.stringify({ itemName: purchase.purchase_items?.[0]?.item?.name || 'Item', isSeller: false }),
       read: false
     }
