@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Search, SlidersHorizontal, X, Loader2, Check } from "lucide-react"
+import { Search, SlidersHorizontal, X, Loader2, Check, ChevronDown } from "lucide-react"
 import { BottomNav } from "@/components/bottom-nav"
 import { ItemCard } from "@/components/item-card"
 import { categories } from "@/lib/data"
@@ -41,6 +41,7 @@ export default function SearchPage() {
   const [activeSize, setActiveSize] = useState("All")
   const [activeBrand, setActiveBrand] = useState("All")
   const [activeColors, setActiveColors] = useState<string[]>([])
+  const [isColorOpen, setIsColorOpen] = useState(false)
   const [minPrice, setMinPrice] = useState(0)
   const [maxPrice, setMaxPrice] = useState(1000)
   const [showFilters, setShowFilters] = useState(false)
@@ -316,41 +317,75 @@ export default function SearchPage() {
             </div>
           </div>
           
-          <div className="flex flex-col gap-1.5">
+          <div className="flex flex-col gap-1.5 relative">
             <label className="text-[10px] font-bold uppercase text-muted-foreground">{t('color')}</label>
-            <div className="hide-scrollbar -mx-4 flex gap-3 overflow-x-auto px-4 pb-2">
-              {STANDARD_COLORS.map((c) => {
-                const isSelected = activeColors.includes(c.name);
-                return (
-                  <button
-                    key={c.name}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      if (isSelected) {
-                        setActiveColors(prev => prev.filter(color => color !== c.name));
-                      } else {
-                        setActiveColors(prev => [...prev, c.name]);
-                      }
-                    }}
-                    className="flex flex-col items-center gap-1.5 shrink-0"
+            <button
+              onClick={() => setIsColorOpen(!isColorOpen)}
+              className={`flex items-center justify-between rounded-lg border border-border/50 bg-muted/30 px-3 py-2 text-sm transition-colors ${activeColors.length > 0 ? 'border-primary/50 text-foreground' : 'text-muted-foreground'}`}
+            >
+              <div className="flex items-center gap-2 overflow-hidden whitespace-nowrap text-ellipsis">
+                {activeColors.length === 0 ? (
+                  <span>{t('anyColor', { defaultValue: 'Any color' })}</span>
+                ) : (
+                  <div className="flex items-center gap-1.5 overflow-hidden">
+                    {activeColors.map((colorName, idx) => {
+                      const c = STANDARD_COLORS.find(col => col.name === colorName);
+                      if (!c) return null;
+                      return (
+                        <div key={idx} className="flex items-center gap-1.5">
+                          {idx > 0 && <span className="text-muted-foreground/50">,</span>}
+                          <div className="h-3 w-3 shrink-0 rounded-full border border-border/50" style={{ background: c.hex }} />
+                          <span className="truncate">{tColors(colorName as any)}</span>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
+              <ChevronDown className="h-4 w-4 shrink-0 opacity-50" />
+            </button>
+            
+            {isColorOpen && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setIsColorOpen(false)} />
+                <div className="absolute top-[60px] left-0 right-0 z-50 rounded-xl bg-background border border-border shadow-lg p-2 max-h-60 overflow-y-auto">
+                  <button 
+                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-muted text-sm text-muted-foreground transition-colors"
+                    onClick={() => { setActiveColors([]); setIsColorOpen(false); }}
                   >
-                    <div 
-                      className={`flex h-7 w-7 items-center justify-center rounded-full transition-all ${
-                        isSelected ? 'ring-2 ring-primary ring-offset-2 ring-offset-background border-primary' : 'border border-border/50'
-                      }`}
-                      style={{ background: c.hex }}
-                    >
-                      {isSelected && (
-                        <Check className={`h-4 w-4 ${c.name === 'White' || c.name === 'Beige' || c.name === 'Silver' ? 'text-black' : 'text-white'}`} />
-                      )}
+                    <div className="flex h-5 w-5 items-center justify-center rounded-full border border-border/50 bg-muted">
+                      <X className="h-3 w-3" />
                     </div>
-                    <span className={`text-[10px] font-medium ${isSelected ? 'text-foreground' : 'text-muted-foreground'}`}>
-                      {tColors(c.name as any)}
-                    </span>
+                    <span>{t('clearColors', { defaultValue: 'Clear colors' })}</span>
                   </button>
-                )
-              })}
-            </div>
+                  
+                  {STANDARD_COLORS.map((c) => {
+                    const isSelected = activeColors.includes(c.name);
+                    return (
+                      <button
+                        key={c.name}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          if (isSelected) {
+                            setActiveColors(prev => prev.filter(color => color !== c.name));
+                          } else {
+                            setActiveColors(prev => [...prev, c.name]);
+                          }
+                        }}
+                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-muted text-sm transition-colors ${isSelected ? 'bg-muted/50 font-medium text-foreground' : 'text-muted-foreground'}`}
+                      >
+                        <div 
+                          className="h-5 w-5 rounded-full border border-border/50" 
+                          style={{ background: c.hex }} 
+                        />
+                        <span>{tColors(c.name as any)}</span>
+                        {isSelected && <Check className="h-4 w-4 ml-auto text-primary" />}
+                      </button>
+                    )
+                  })}
+                </div>
+              </>
+            )}
           </div>
 
           <div className="flex flex-col gap-1.5">

@@ -148,7 +148,9 @@
     "updateListing": "Mettre à jour l'annonce",
     "updating": "Mise à jour...",
     "failedToUpdate": "Échec de la mise à jour de l'annonce",
-    "placeholderColor": "Sélectionner la couleur"
+    "placeholderColor": "Sélectionner la couleur",
+    "colorOptional": "Couleur (Optionnel)",
+    "none": "Aucune"
   },
   "Auth": {
     "welcomeBack": "Bon retour",

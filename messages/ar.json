@@ -148,7 +148,9 @@
     "updateListing": "تحديث الإعلان",
     "updating": "جاري التحديث...",
     "failedToUpdate": "فشل في تحديث الإعلان",
-    "placeholderColor": "اختر اللون"
+    "placeholderColor": "اختر اللون",
+    "colorOptional": "اللون (اختياري)",
+    "none": "بدون"
   },
   "Auth": {
     "welcomeBack": "أهلاً بعودتك",

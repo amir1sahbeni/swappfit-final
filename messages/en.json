@@ -148,7 +148,9 @@
     "updateListing": "Update Listing",
     "updating": "Updating...",
     "failedToUpdate": "Failed to update listing",
-    "placeholderColor": "Select Color"
+    "placeholderColor": "Select Color",
+    "colorOptional": "Color (Optional)",
+    "none": "None"
   },
   "Auth": {
     "welcomeBack": "Welcome back",
