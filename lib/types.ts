@@ -2,7 +2,7 @@
 // All app code should import from here — not from lib/data.ts.
 
 export type Condition = 'New' | 'Like New' | 'Excellent' | 'Good' | 'Fair'
-export type ListingStatus = 'active' | 'swapped' | 'sold' | 'removed'
+export type ListingStatus = 'active' | 'swapped' | 'sold' | 'removed' | 'deleted'
 export type ProposalStatus = 'pending' | 'accepted' | 'declined' | 'completed' | 'cancelled'
 export type NotificationType = 'swap_proposal' | 'swap_accepted' | 'swap_declined' | 'swap_cancelled' | 'swap_completed' | 'message' | 'rating' | 'like' | 'purchase_request' | 'purchase_accepted' | 'purchase_rejected' | 'purchase_cancelled' | 'purchase_completed' | 'purchase_confirmed' | 'new_follower'
 
@@ -41,6 +41,7 @@ export interface Listing {
   /** Stored in cents, e.g. 12800 = $128 */
   price: number
   category: string
+  color?: string
   condition: Condition
   images: string[]
   size_type?: string
@@ -187,6 +188,7 @@ export interface Item {
   condition: Condition
   brand: string
   size: string
+  color?: string
   description: string
   sellerId: string
   distance: string

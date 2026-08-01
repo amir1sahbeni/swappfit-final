@@ -142,7 +142,13 @@
     "placeholderBrand": "Levi's",
     "placeholderSize": "M",
     "placeholderPrice": "0 د.ت",
-    "placeholderDescription": "أخبر المبادلين عن عنصرك..."
+    "placeholderDescription": "أخبر المبادلين عن عنصرك...",
+    "color": "اللون",
+    "editListing": "تعديل الإعلان",
+    "updateListing": "تحديث الإعلان",
+    "updating": "جاري التحديث...",
+    "failedToUpdate": "فشل في تحديث الإعلان",
+    "placeholderColor": "اختر اللون"
   },
   "Auth": {
     "welcomeBack": "أهلاً بعودتك",
@@ -190,7 +196,9 @@
     "oneSize": "مقاس واحد",
     "placeholderBrand": "مثال: Levi's، Nike، Zara...",
     "items": "العناصر",
-    "people": "الأشخاص"
+    "people": "الأشخاص",
+    "priceRange": "نطاق السعر",
+    "color": "اللون"
   },
   "Exchange": {
     "yourItem": "عنصرك",
@@ -240,7 +248,9 @@
     "size": "المقاس",
     "buy": "شراء",
     "failedToBuy": "فشل الشراء",
-    "pinchToZoom": "قرص للتكبير"
+    "pinchToZoom": "قرص للتكبير",
+    "editListing": "تعديل الإعلان",
+    "color": "اللون"
   },
   "Favourites": {
     "title": "المفضلة",
@@ -489,5 +499,21 @@
   "Sizes": {
     "Kids (Under 35)": "أطفال (أقل من 35)",
     "Kids": "أطفال"
+  },
+  "Colors": {
+    "Black": "أسود",
+    "White": "أبيض",
+    "Gray": "رمادي",
+    "Red": "أحمر",
+    "Orange": "برتقالي",
+    "Yellow": "أصفر",
+    "Green": "أخضر",
+    "Blue": "أزرق",
+    "Purple": "بنفسجي",
+    "Pink": "وردي",
+    "Brown": "بني",
+    "Beige": "بيج",
+    "Navy": "كحلي",
+    "Multicolor": "متعدد الألوان"
   }
 }

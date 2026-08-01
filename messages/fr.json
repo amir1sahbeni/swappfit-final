@@ -142,7 +142,13 @@
     "placeholderBrand": "Levi's",
     "placeholderSize": "M",
     "placeholderPrice": "0 TND",
-    "placeholderDescription": "Parle aux échangeurs de ton article..."
+    "placeholderDescription": "Parle aux échangeurs de ton article...",
+    "color": "Couleur",
+    "editListing": "Modifier l'annonce",
+    "updateListing": "Mettre à jour l'annonce",
+    "updating": "Mise à jour...",
+    "failedToUpdate": "Échec de la mise à jour de l'annonce",
+    "placeholderColor": "Sélectionner la couleur"
   },
   "Auth": {
     "welcomeBack": "Bon retour",
@@ -190,7 +196,9 @@
     "oneSize": "Taille unique",
     "placeholderBrand": "ex. Levi's, Nike, Zara...",
     "items": "Articles",
-    "people": "Personnes"
+    "people": "Personnes",
+    "priceRange": "Gamme de prix",
+    "color": "Couleur"
   },
   "Exchange": {
     "yourItem": "Ton article",
@@ -240,7 +248,9 @@
     "size": "Taille",
     "buy": "Acheter",
     "failedToBuy": "Échec de l'achat",
-    "pinchToZoom": "Pincez pour zoomer"
+    "pinchToZoom": "Pincez pour zoomer",
+    "editListing": "Modifier l'annonce",
+    "color": "Couleur"
   },
   "Favourites": {
     "title": "Favoris",
@@ -489,5 +499,21 @@
   "Sizes": {
     "Kids (Under 35)": "Enfants (Moins de 35)",
     "Kids": "Enfants"
+  },
+  "Colors": {
+    "Black": "Noir",
+    "White": "Blanc",
+    "Gray": "Gris",
+    "Red": "Rouge",
+    "Orange": "Orange",
+    "Yellow": "Jaune",
+    "Green": "Vert",
+    "Blue": "Bleu",
+    "Purple": "Violet",
+    "Pink": "Rose",
+    "Brown": "Marron",
+    "Beige": "Beige",
+    "Navy": "Bleu marine",
+    "Multicolor": "Multicolore"
   }
 }

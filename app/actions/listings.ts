@@ -13,6 +13,7 @@ export async function createListing(formData: {
   description: string
   category: string
   condition: string
+  color?: string
   images: string[]
   size_type?: string
   gender?: string
@@ -43,6 +44,7 @@ export async function createListing(formData: {
     description: formData.description.trim(),
     category: formData.category,
     condition: formData.condition,
+    color: formData.color || '',
     images: formData.images,
     size_type: formData.size_type,
     gender: formData.gender,
@@ -72,32 +74,49 @@ export async function deleteListing(id: string) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/auth')
 
-  // Check if listing has any active proposals or purchases
-  const { data: activeProposals } = await supabase
-    .from('swap_proposals')
-    .select('id')
-    .or(`offered_item_id.eq.${id},wanted_item_id.eq.${id}`)
-    .in('status', ['pending', 'accepted'])
-
-  const { data: activePurchases } = await supabase
-    .from('purchase_items')
-    .select('purchase_id, purchases(status)')
-    .eq('item_id', id)
-    .in('purchases.status', ['pending_seller_approval', 'accepted'])
-
-  if ((activeProposals && activeProposals.length > 0) || (activePurchases && activePurchases.length > 0)) {
-    throw new Error('Cannot delete listing with active swaps or purchases')
-  }
-
-  // Delete the listing completely
+  // We will perform a soft delete to avoid FK constraint violations
+  // if this listing was ever proposed in a swap or purchased.
   const { error } = await supabase
     .from('listings')
-    .delete()
+    .update({ status: 'deleted' })
     .eq('id', id)
     .eq('seller_id', user.id)
 
   if (error) throw new Error(error.message)
   redirect('/profile')
+}
+
+export async function updateListing(id: string, formData: {
+  name: string
+  brand: string
+  size: string
+  price: string
+  description: string
+  category: string
+  condition: string
+  color: string
+}) {
+  const supabase = await createServerClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Unauthorized')
+
+  const { error } = await supabase
+    .from('listings')
+    .update({
+      name: formData.name.trim(),
+      brand: formData.brand.trim(),
+      size: formData.size.trim(),
+      price: parsePriceToCents(formData.price),
+      description: formData.description.trim(),
+      category: formData.category,
+      condition: formData.condition,
+      color: formData.color,
+      updated_at: new Date().toISOString()
+    })
+    .eq('id', id)
+    .eq('seller_id', user.id)
+
+  if (error) throw new Error(error.message)
 }
 
 export async function toggleSaveListing(listingId: string, currentlySaved: boolean) {

@@ -19,6 +19,7 @@ const formCategories = categories.filter((c) => c !== "All")
 export default function CreateListingPage() {
   const t = useTranslations('Create')
   const tAuth = useTranslations('Auth')
+  const tColors = useTranslations('Colors')
   const router = useRouter()
   const [name, setName] = useState("")
   const [brand, setBrand] = useState("")
@@ -26,6 +27,7 @@ export default function CreateListingPage() {
   const [price, setPrice] = useState("")
   const [description, setDescription] = useState("")
   const [category, setCategory] = useState("Tops")
+  const [color, setColor] = useState("")
   const [condition, setCondition] = useState("Like New")
   
   const [files, setFiles] = useState<File[]>([])
@@ -164,6 +166,7 @@ export default function CreateListingPage() {
         description,
         category,
         condition,
+        color,
         images: uploadedUrls,
         size_type: sizeType,
         gender: undefined,
@@ -258,6 +261,19 @@ export default function CreateListingPage() {
               </Chip>
             ))}
           </div>
+        </Field>
+
+        <Field label={t('color')}>
+          <select
+            value={color}
+            onChange={(e) => setColor(e.target.value)}
+            className="w-full rounded-xl bg-muted px-4 py-3 text-sm text-foreground outline-none border-r-8 border-transparent focus:ring-2 focus:ring-ring"
+          >
+            <option value="" disabled>{t('placeholderColor')}</option>
+            {(['Black', 'White', 'Gray', 'Red', 'Orange', 'Yellow', 'Green', 'Blue', 'Purple', 'Pink', 'Brown', 'Beige', 'Navy', 'Multicolor'] as const).map(c => (
+              <option key={c} value={c}>{tColors(c)}</option>
+            ))}
+          </select>
         </Field>
 
         <div className="grid grid-cols-2 gap-4">

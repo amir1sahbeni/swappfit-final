@@ -15,11 +15,15 @@ export default function SearchPage() {
   const t = useTranslations('Search')
   const tCat = useTranslations('Categories')
   const tSize = useTranslations('Sizes')
+  const tColors = useTranslations('Colors')
   const [searchMode, setSearchMode] = useState<"items" | "people">("items")
   const [query, setQuery] = useState("")
   const [activeCategory, setActiveCategory] = useState("All")
   const [activeSize, setActiveSize] = useState("All")
   const [activeBrand, setActiveBrand] = useState("All")
+  const [activeColor, setActiveColor] = useState("All")
+  const [minPrice, setMinPrice] = useState(0)
+  const [maxPrice, setMaxPrice] = useState(1000)
   const [showFilters, setShowFilters] = useState(false)
   const [recentSearches, setRecentSearches] = useState<string[]>([])
   const [recentUserSearches, setRecentUserSearches] = useState<string[]>([])
@@ -126,6 +130,17 @@ export default function SearchPage() {
           dbQuery = dbQuery.ilike('brand', `%${activeBrand}%`)
         }
 
+        if (activeColor !== 'All') {
+          dbQuery = dbQuery.eq('color', activeColor)
+        }
+
+        if (minPrice > 0) {
+          dbQuery = dbQuery.gte('price', minPrice * 100)
+        }
+        if (maxPrice < 1000) {
+          dbQuery = dbQuery.lte('price', maxPrice * 100)
+        }
+
         if (query.trim()) {
           dbQuery = dbQuery.or(`name.ilike.%${query}%,brand.ilike.%${query}%,description.ilike.%${query}%`)
         }
@@ -156,7 +171,7 @@ export default function SearchPage() {
     }, 300)
 
     return () => clearTimeout(timer)
-  }, [query, activeCategory, activeSize, activeBrand, supabase, searchMode])
+  }, [query, activeCategory, activeSize, activeBrand, activeColor, minPrice, maxPrice, supabase, searchMode])
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && query.trim() !== "") {
@@ -223,61 +238,119 @@ export default function SearchPage() {
 
       {/* Filter Panel - only for items mode */}
       {showFilters && searchMode === "items" && (
-        <div className="mt-3 rounded-2xl bg-card p-4 shadow-sm border border-border flex gap-3">
-          <div className="flex-1 flex flex-col gap-1.5">
-            <label className="text-[10px] font-bold uppercase text-muted-foreground">{t('brand')}</label>
-            <input
-              type="text"
-              value={activeBrand === "All" ? "" : activeBrand}
-              onChange={e => setActiveBrand(e.target.value || "All")}
-              placeholder={t('placeholderBrand')}
-              className="w-full rounded-xl bg-muted px-3 py-2 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:ring-2 focus:ring-ring"
-            />
-          </div>
-
-          <div className="flex-1 flex flex-col gap-1.5">
-            <label className="text-[10px] font-bold uppercase text-muted-foreground">{t('size')}</label>
-            {activeCategory === "Accessories" ? (
+        <div className="mt-3 rounded-2xl bg-card p-4 shadow-sm border border-border flex flex-col gap-4">
+          <div className="flex gap-3">
+            <div className="flex-1 flex flex-col gap-1.5">
+              <label className="text-[10px] font-bold uppercase text-muted-foreground">{t('brand')}</label>
               <input
                 type="text"
-                value={activeSize === "All" ? "" : activeSize}
-                onChange={e => setActiveSize(e.target.value || "All")}
-                placeholder="e.g. Adjustable"
+                value={activeBrand === "All" ? "" : activeBrand}
+                onChange={e => setActiveBrand(e.target.value || "All")}
+                placeholder={t('placeholderBrand')}
                 className="w-full rounded-xl bg-muted px-3 py-2 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:ring-2 focus:ring-ring"
               />
-            ) : (
-              <select
-                value={activeSize}
-                onChange={e => setActiveSize(e.target.value)}
-                className="w-full bg-muted rounded-xl px-3 py-2 text-sm text-foreground outline-none border-r-8 border-transparent"
-              >
-                <option value="All">{t('allSizes')}</option>
-                {activeCategory === "Shoes" ? (
-                  <>
-                    <option value="Kids (Under 35)">{tSize("Kids (Under 35)")}</option>
-                    {Array.from({ length: 14 }, (_, i) => 35 + i).map(size => (
-                      <option key={size} value={size.toString()}>{size}</option>
-                    ))}
-                  </>
-                ) : (activeCategory === "Trousers" || activeCategory === "Bottoms") ? (
-                  <>
-                    <option value="Kids">{tSize("Kids")}</option>
-                    {["32", "34", "36", "38", "40", "42", "44", "46", "48", "50"].map(s => <option key={s} value={s}>{s}</option>)}
-                  </>
-                ) : (
-                  <>
-                    <option value="Kids">{t('kids')}</option>
-                    <option value="XS">XS</option>
-                    <option value="S">S</option>
-                    <option value="M">M</option>
-                    <option value="L">L</option>
-                    <option value="XL">XL</option>
-                    <option value="XXL">XXL</option>
-                    <option value="3XL">3XL</option>
-                  </>
-                )}
-              </select>
-            )}
+            </div>
+
+            <div className="flex-1 flex flex-col gap-1.5">
+              <label className="text-[10px] font-bold uppercase text-muted-foreground">{t('size')}</label>
+              {activeCategory === "Accessories" ? (
+                <input
+                  type="text"
+                  value={activeSize === "All" ? "" : activeSize}
+                  onChange={e => setActiveSize(e.target.value || "All")}
+                  placeholder="e.g. Adjustable"
+                  className="w-full rounded-xl bg-muted px-3 py-2 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:ring-2 focus:ring-ring"
+                />
+              ) : (
+                <select
+                  value={activeSize}
+                  onChange={e => setActiveSize(e.target.value)}
+                  className="w-full bg-muted rounded-xl px-3 py-2 text-sm text-foreground outline-none border-r-8 border-transparent"
+                >
+                  <option value="All">{t('allSizes')}</option>
+                  {activeCategory === "Shoes" ? (
+                    <>
+                      <option value="Kids (Under 35)">{tSize("Kids (Under 35)")}</option>
+                      {Array.from({ length: 14 }, (_, i) => 35 + i).map(size => (
+                        <option key={size} value={size.toString()}>{size}</option>
+                      ))}
+                    </>
+                  ) : (activeCategory === "Trousers" || activeCategory === "Bottoms") ? (
+                    <>
+                      <option value="Kids">{tSize("Kids")}</option>
+                      {["32", "34", "36", "38", "40", "42", "44", "46", "48", "50"].map(s => <option key={s} value={s}>{s}</option>)}
+                    </>
+                  ) : (
+                    <>
+                      <option value="Kids">{t('kids')}</option>
+                      <option value="XS">XS</option>
+                      <option value="S">S</option>
+                      <option value="M">M</option>
+                      <option value="L">L</option>
+                      <option value="XL">XL</option>
+                      <option value="XXL">XXL</option>
+                      <option value="3XL">3XL</option>
+                    </>
+                  )}
+                </select>
+              )}
+            </div>
+          </div>
+          
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[10px] font-bold uppercase text-muted-foreground">{t('color')}</label>
+            <select
+              value={activeColor}
+              onChange={e => setActiveColor(e.target.value)}
+              className="w-full bg-muted rounded-xl px-3 py-2 text-sm text-foreground outline-none border-r-8 border-transparent"
+            >
+              <option value="All">{tCat('All')}</option>
+              {(['Black', 'White', 'Gray', 'Red', 'Orange', 'Yellow', 'Green', 'Blue', 'Purple', 'Pink', 'Brown', 'Beige', 'Navy', 'Multicolor'] as const).map(color => (
+                <option key={color} value={color}>{tColors(color)}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <div className="flex justify-between items-center">
+              <label className="text-[10px] font-bold uppercase text-muted-foreground">{t('priceRange')}</label>
+              <span className="text-xs font-medium">${minPrice} - ${maxPrice === 1000 ? '1000+' : maxPrice}</span>
+            </div>
+            <div className="relative h-6 flex items-center">
+              {/* Custom dual slider using two overlaid range inputs */}
+              <div className="absolute inset-0 top-1/2 -mt-0.5 h-1 bg-muted rounded-full pointer-events-none" />
+              <div 
+                className="absolute inset-0 top-1/2 -mt-0.5 h-1 bg-primary rounded-full pointer-events-none" 
+                style={{ 
+                  left: `${(minPrice / 1000) * 100}%`, 
+                  right: `${100 - (maxPrice / 1000) * 100}%` 
+                }} 
+              />
+              <input 
+                type="range" 
+                min={0} max={1000} step={10} 
+                value={minPrice} 
+                onChange={(e) => {
+                  const val = Math.min(Number(e.target.value), maxPrice - 10)
+                  setMinPrice(val)
+                }}
+                className="absolute w-full h-1 opacity-0 cursor-pointer pointer-events-auto"
+                style={{ zIndex: minPrice > 1000 - 100 ? 5 : 3 }}
+              />
+              <input 
+                type="range" 
+                min={0} max={1000} step={10} 
+                value={maxPrice} 
+                onChange={(e) => {
+                  const val = Math.max(Number(e.target.value), minPrice + 10)
+                  setMaxPrice(val)
+                }}
+                className="absolute w-full h-1 opacity-0 cursor-pointer pointer-events-auto z-4"
+              />
+              {/* Thumbs for visual representation */}
+              <div className="absolute w-4 h-4 bg-primary rounded-full shadow top-1/2 -mt-2 pointer-events-none" style={{ left: `calc(${(minPrice / 1000) * 100}% - 8px)` }} />
+              <div className="absolute w-4 h-4 bg-primary rounded-full shadow top-1/2 -mt-2 pointer-events-none" style={{ left: `calc(${(maxPrice / 1000) * 100}% - 8px)` }} />
+            </div>
           </div>
         </div>
       )}

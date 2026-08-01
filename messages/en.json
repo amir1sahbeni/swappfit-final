@@ -142,7 +142,13 @@
     "placeholderBrand": "Levi's",
     "placeholderSize": "M",
     "placeholderPrice": "$0",
-    "placeholderDescription": "Tell swappers about your item..."
+    "placeholderDescription": "Tell swappers about your item...",
+    "color": "Color",
+    "editListing": "Edit Listing",
+    "updateListing": "Update Listing",
+    "updating": "Updating...",
+    "failedToUpdate": "Failed to update listing",
+    "placeholderColor": "Select Color"
   },
   "Auth": {
     "welcomeBack": "Welcome back",
@@ -190,7 +196,9 @@
     "oneSize": "One Size",
     "placeholderBrand": "e.g. Levi's, Nike, Zara...",
     "items": "Items",
-    "people": "People"
+    "people": "People",
+    "priceRange": "Price Range",
+    "color": "Color"
   },
   "Exchange": {
     "yourItem": "Your Item",
@@ -240,7 +248,9 @@
     "size": "Size",
     "buy": "Buy",
     "failedToBuy": "Failed to buy",
-    "pinchToZoom": "Pinch to zoom"
+    "pinchToZoom": "Pinch to zoom",
+    "editListing": "Edit Listing",
+    "color": "Color"
   },
   "Favourites": {
     "title": "Favourites",
@@ -489,5 +499,21 @@
   "Sizes": {
     "Kids (Under 35)": "Kids (Under 35)",
     "Kids": "Kids"
+  },
+  "Colors": {
+    "Black": "Black",
+    "White": "White",
+    "Gray": "Gray",
+    "Red": "Red",
+    "Orange": "Orange",
+    "Yellow": "Yellow",
+    "Green": "Green",
+    "Blue": "Blue",
+    "Purple": "Purple",
+    "Pink": "Pink",
+    "Brown": "Brown",
+    "Beige": "Beige",
+    "Navy": "Navy",
+    "Multicolor": "Multicolor"
   }
 }

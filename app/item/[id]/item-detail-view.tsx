@@ -1,10 +1,10 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useTransition } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
-import { ChevronLeft, Heart, Share2, Star, MapPin, ShieldCheck, Loader2, MoreVertical, Trash2, X, ZoomIn } from "lucide-react"
+import { ChevronLeft, Heart, Share2, Star, MapPin, ShieldCheck, Loader2, MoreVertical, Trash2, X, ZoomIn, Pencil } from "lucide-react"
 import type { Item, Seller, Profile } from "@/lib/types"
 import { deleteListing } from "@/app/actions/listings"
 import { toggleFavourite } from "@/app/actions/favourites"
@@ -14,7 +14,9 @@ import { useTranslations } from 'next-intl'
 
 export function ItemDetailView({ item, seller, initialSaved, isOwner, currentUserProfile }: { item: Item; seller: Seller; initialSaved: boolean; isOwner?: boolean; currentUserProfile?: Profile | null }) {
   const t = useTranslations('ItemDetail')
+  const tColors = useTranslations('Colors')
   const router = useRouter()
+  const [, startTransition] = useTransition()
   const [saved, setSaved] = useState(initialSaved)
   const [isSaving, setIsSaving] = useState(false)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -279,7 +281,7 @@ export function ItemDetailView({ item, seller, initialSaved, isOwner, currentUse
           <div className="min-w-0">
             <h1 className="text-xl font-bold text-foreground">{item.name}</h1>
             <p className="mt-1 truncate text-sm text-muted-foreground">
-              {item.brand} · {t('size')} {item.size}
+              {item.brand}{item.color ? ` · ${tColors(item.color as any)}` : ''} · {t('size')} {item.size}
             </p>
           </div>
           <span className="shrink-0 text-xl font-bold text-primary">{item.price}</span>
@@ -376,6 +378,20 @@ export function ItemDetailView({ item, seller, initialSaved, isOwner, currentUse
             </div>
             
             <div className="flex flex-col gap-3">
+              <button
+                onClick={() => {
+                  setIsMenuOpen(false);
+                  router.push(`/edit/${item.id}`);
+                }}
+                className="flex items-center gap-3 rounded-2xl bg-muted/50 p-4 text-left transition-transform active:scale-95"
+              >
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-background text-foreground shadow-sm">
+                  <Pencil className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="font-bold text-foreground">{t('editListing')}</p>
+                </div>
+              </button>
               <button
                 onClick={handleDelete}
                 className="flex items-center gap-3 rounded-2xl bg-destructive/10 p-4 text-left transition-transform active:scale-95"

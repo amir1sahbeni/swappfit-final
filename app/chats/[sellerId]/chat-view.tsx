@@ -65,28 +65,36 @@ export function ChatView({
     if (!conversationId) return
 
     const channel = supabase
-      .channel(`chat_${conversationId}_${Date.now()}`)
+      .channel(`chat_${conversationId}`)
       .on('postgres_changes', {
-        event: '*',
+        event: 'INSERT',
         schema: 'public',
         table: 'messages',
         filter: `conversation_id=eq.${conversationId}`
       }, (payload) => {
-        if (payload.eventType === 'INSERT') {
-          const newMessage = payload.new as Message
-          if (newMessage.sender_id !== currentUserId) {
-            setMessages(prev => [...prev, newMessage])
-          }
-        } else if (payload.eventType === 'UPDATE') {
-          setMessages(prev => prev.map(m => m.id === payload.new.id ? payload.new as Message : m))
+        const newMessage = payload.new as Message
+        if (newMessage.sender_id !== currentUserId) {
+          setMessages(prev => {
+            // Prevent duplicates
+            if (prev.some(m => m.id === newMessage.id)) return prev
+            return [...prev, newMessage]
+          })
         }
+      })
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'messages',
+        filter: `conversation_id=eq.${conversationId}`
+      }, (payload) => {
+        setMessages(prev => prev.map(m => m.id === payload.new.id ? payload.new as Message : m))
       })
       .subscribe()
 
     return () => {
-      channel.unsubscribe()
+      supabase.removeChannel(channel)
     }
-  }, [conversationId, currentUserId, supabase])
+  }, [conversationId, currentUserId])
 
   // Scroll to bottom - useLayoutEffect for initial load to prevent visible scroll animation
   useLayoutEffect(() => {
