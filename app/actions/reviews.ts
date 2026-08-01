@@ -35,13 +35,16 @@ export async function submitReview(data: {
   if (aggErr) throw new Error(aggErr.message)
 
   const count = allReviews.length
-  const avg = count > 0
+  const averageRating = count > 0
     ? allReviews.reduce((sum, r) => sum + r.rating, 0) / count
     : 0
 
   await supabase
     .from('profiles')
-    .update({ rating: parseFloat(avg.toFixed(2)), review_count: count })
+    .update({ 
+      rating: Math.round(averageRating * 10) / 10, // Round to 1 decimal
+      review_count: count 
+    })
     .eq('id', data.revieweeId)
 
   // Notification
