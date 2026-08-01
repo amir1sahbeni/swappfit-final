@@ -47,7 +47,6 @@ export interface Listing {
   size_type?: string
   gender?: string
   status: ListingStatus
-  featured_until?: string | null
   created_at: string
   updated_at: string
   listing_lat: number | null

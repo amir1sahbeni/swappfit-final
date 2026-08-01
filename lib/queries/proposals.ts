@@ -16,7 +16,7 @@ export async function getProposalById(id: string): Promise<SwapProposal | null> 
         listing:listings(id, seller_id, name, brand, size, description, price, images, category, condition, status, created_at, listing_lat, listing_lng, color)
       )
     `)
-    .eq('id', id)
+    .eq('swap_proposals.id', id)
     .single()
 
   if (error || !data) return null

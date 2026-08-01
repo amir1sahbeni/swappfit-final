@@ -99,7 +99,6 @@ export function listingToItem(listing: Listing, currentUserProfile?: Profile | n
     sellerId: listing.seller_id,
     distance: (listing.profiles?.city && listing.profiles?.governorate) ? `${listing.profiles.city}, ${listing.profiles.governorate}` : (listing.profiles?.location ?? ''),
     postedAt: formatRelativeTime(listing.created_at),
-    isFeatured: !!listing.featured_until && new Date(listing.featured_until) > new Date(),
     status: listing.status,
     // Include location fields for distance calculation
     listing_lat: listing.listing_lat,

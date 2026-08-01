@@ -70,7 +70,6 @@ export async function getActiveListings(): Promise<Listing[]> {
     status: l.status,
     created_at: l.created_at,
     updated_at: l.updated_at,
-    featured_until: l.featured_until,
     listing_lat: l.listing_lat,
     listing_lng: l.listing_lng,
     profiles: {
