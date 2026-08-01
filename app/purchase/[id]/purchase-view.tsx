@@ -73,14 +73,14 @@ export function PurchaseView({
         if (action === 'reject') {
           router.replace('/')
         } else {
-          router.replace(`/purchase/${purchase.id}`)
+          router.refresh() // Force UI update
         }
       } else {
         setActionError(res.error ? tErr(res.error) : t("somethingWentWrong"))
-        setIsUpdating(false)
       }
     } catch (err: any) {
       setActionError(t("somethingWentWrong"))
+    } finally {
       setIsUpdating(false)
     }
   }
@@ -94,13 +94,13 @@ export function PurchaseView({
         router.replace('/')
       } else {
         setActionError(res.error ? tErr(res.error) : t("failedToCancel"))
-        setIsCancelling(false)
         setCancelConfirm(false)
       }
     } catch (err: any) {
       setActionError(err.message || "Something went wrong")
-      setIsCancelling(false)
       setCancelConfirm(false)
+    } finally {
+      setIsCancelling(false)
     }
   }
 

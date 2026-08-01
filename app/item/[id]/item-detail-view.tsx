@@ -158,6 +158,7 @@ export function ItemDetailView({ item, seller, initialSaved, isOwner, currentUse
     setIsSaving(true)
     try {
       await toggleFavourite(item.id, newSaved)
+      router.refresh() // Force UI update
     } catch (err: any) {
       // Roll back the optimistic update on failure
       setSaved(!newSaved)

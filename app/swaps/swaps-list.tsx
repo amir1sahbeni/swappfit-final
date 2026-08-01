@@ -32,6 +32,7 @@ export function SwapsList({ history, userId }: { history: any[], userId: string 
       }
       // Remove from local state
       setLocalHistory(localHistory.filter(item => item.id !== id))
+      router.refresh() // Force UI update
     } catch (error: any) {
       alert(t('failedToDelete') + error.message)
     }

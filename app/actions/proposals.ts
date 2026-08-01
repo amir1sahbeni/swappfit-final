@@ -411,6 +411,7 @@ export async function updateProposalStatus(
 
   revalidatePath(`/exchange/${proposalId}`)
   revalidatePath('/swaps')
+  revalidatePath('/')
 }
 
 // ─────────────────────────────────────────────

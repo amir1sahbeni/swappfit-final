@@ -43,6 +43,7 @@ export async function toggleFollow(followingId: string, currentIsFollowing: bool
     
     revalidatePath(`/user/${followingId}`)
     revalidatePath('/profile')
+    revalidatePath('/')
     return { success: true }
   } catch (err: any) {
     return { success: false, error: err.message || 'Unknown error' }

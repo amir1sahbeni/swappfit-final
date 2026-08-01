@@ -29,6 +29,7 @@ export function FollowButton({
       
       if (result.success) {
         setIsFollowing(!isFollowing)
+        router.refresh() // Force UI update
       } else {
         alert("Failed to update follow status: " + (result.error || "Unknown error"))
       }
