@@ -8,6 +8,9 @@ import type { Item, Profile, SwapProposal } from "@/lib/types"
 import { updateProposalStatus, cancelProposal } from "@/app/actions/proposals"
 import { createClient } from "@/lib/supabase/client"
 import { useTranslations } from 'next-intl'
+import { ItemDetailModal } from "@/components/item-detail-modal"
+import { ItemListModal } from "@/components/item-list-modal"
+import { TopProgressBar } from "@/components/top-progress-bar"
 
 export function ExchangeView({
   proposal: initialProposal,
@@ -34,6 +37,8 @@ export function ExchangeView({
   const [proposal, setProposal] = useState<SwapProposal>(initialProposal)
   const [actionError, setActionError] = useState<string | null>(null)
   const [cancelConfirm, setCancelConfirm] = useState(false)
+  const [previewItem, setPreviewItem] = useState<Item | null>(null)
+  const [listModalItems, setListModalItems] = useState<{ items: Item[], title: string } | null>(null)
   const supabase = createClient()
 
   useEffect(() => {
@@ -66,38 +71,72 @@ export function ExchangeView({
   }, [proposal.id])
 
   const handleAction = async (newStatus: "accepted" | "declined" | "completed") => {
+    const previousStatus = proposal.status
+    const previousProposerConfirmed = proposal.proposer_confirmed
+    const previousReceiverConfirmed = proposal.receiver_confirmed
+
+    // 1. Optimistic Update
+    setProposal(prev => {
+      const updated = { ...prev }
+      if (newStatus === 'completed') {
+        if (isProposer) updated.proposer_confirmed = true
+        else updated.receiver_confirmed = true
+        if (updated.proposer_confirmed && updated.receiver_confirmed) {
+          updated.status = 'completed'
+        }
+      } else {
+        updated.status = newStatus
+      }
+      return updated
+    })
     setIsUpdating(true)
     setActionError(null)
+
     try {
       await updateProposalStatus(proposal.id, newStatus)
       if (newStatus === 'declined') {
         router.replace('/')
       } else {
-        router.refresh() // Force UI update
+        router.refresh() // Sync with server
       }
     } catch (err: any) {
+      // Revert on error
+      setProposal(prev => ({ 
+        ...prev, 
+        status: previousStatus,
+        proposer_confirmed: previousProposerConfirmed,
+        receiver_confirmed: previousReceiverConfirmed
+      }))
       setActionError(tv("somethingWentWrong"))
     } finally {
-      setIsUpdating(false) // Always reset loading state
+      setIsUpdating(false)
     }
   }
 
   const handleCancel = async () => {
+    const previousStatus = proposal.status
+    
+    // 1. Optimistic Update
+    setProposal(prev => ({ ...prev, status: 'cancelled' }))
     setIsCancelling(true)
     setActionError(null)
+    setCancelConfirm(false) // Close modal immediately
+
     try {
       const res = await cancelProposal(proposal.id)
       if (res.success) {
         router.replace('/')
       } else {
+        // Revert on error
+        setProposal(prev => ({ ...prev, status: previousStatus }))
         setActionError(res.error ? tErr(res.error) : tv("failedToCancel"))
-        setCancelConfirm(false)
       }
     } catch (err: any) {
+      // Revert on error
+      setProposal(prev => ({ ...prev, status: previousStatus }))
       setActionError(err.message || "Something went wrong")
-      setCancelConfirm(false)
     } finally {
-      setIsCancelling(false) // Always reset loading state
+      setIsCancelling(false)
     }
   }
 
@@ -127,8 +166,21 @@ export function ExchangeView({
   const theirItems = isReceiver ? offeredItems : wantedItems
 
   return (
-    <main className="mx-auto w-full max-w-[390px] min-h-dvh px-5 pb-28 pt-2">
-      <header className="flex items-center justify-between">
+    <>
+      <TopProgressBar isUpdating={isUpdating || isCancelling} />
+      {previewItem && (
+        <ItemDetailModal item={previewItem} onClose={() => setPreviewItem(null)} />
+      )}
+      {listModalItems && (
+        <ItemListModal 
+          items={listModalItems.items} 
+          title={listModalItems.title} 
+          onClose={() => setListModalItems(null)} 
+          onSelect={(item) => setPreviewItem(item)} 
+        />
+      )}
+      <main className="mx-auto w-full max-w-[390px] min-h-dvh px-5 pb-28 pt-2">
+        <header className="flex items-center justify-between">
         <button onClick={() => router.back()} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-muted">
           <ChevronLeft className="h-5 w-5 text-foreground rtl-flip" />
         </button>
@@ -144,7 +196,10 @@ export function ExchangeView({
 
       <div className="mt-8 flex items-center justify-center gap-4">
         <div className="flex w-28 flex-col items-center">
-          <div className="relative h-28 w-28">
+          <button 
+            onClick={() => myItems.length > 1 ? setListModalItems({ items: myItems, title: isReceiver ? t('yourItem') : t('youOffered') }) : setPreviewItem(myItems[0])}
+            className="relative h-28 w-28 transition-transform active:scale-95"
+          >
             {myItems.slice(0, 3).map((item, index) => (
               <img 
                 key={item.id}
@@ -159,7 +214,7 @@ export function ExchangeView({
                 {myItems.length}
               </div>
             )}
-          </div>
+          </button>
           <p className="mt-5 truncate text-xs font-semibold text-foreground text-center w-full">
             {isReceiver ? t('yourItem') : t('youOffered')}
           </p>
@@ -170,7 +225,10 @@ export function ExchangeView({
         </div>
         
         <div className="flex w-28 flex-col items-center">
-          <div className="relative h-28 w-28">
+          <button 
+            onClick={() => theirItems.length > 1 ? setListModalItems({ items: theirItems, title: isReceiver ? t('theyOffer') : t('theyGive') }) : setPreviewItem(theirItems[0])}
+            className="relative h-28 w-28 transition-transform active:scale-95"
+          >
             {theirItems.slice(0, 3).map((item, index) => (
               <img 
                 key={item.id}
@@ -185,7 +243,7 @@ export function ExchangeView({
                 {theirItems.length}
               </div>
             )}
-          </div>
+          </button>
           <p className="mt-5 truncate text-xs font-semibold text-foreground text-center w-full">
             {isReceiver ? t('theyOffer') : t('theyGive')}
           </p>
@@ -393,5 +451,6 @@ export function ExchangeView({
         )}
       </div>
     </main>
+    </>
   )
 }

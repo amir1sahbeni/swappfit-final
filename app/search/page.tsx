@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { Search, SlidersHorizontal, X, Loader2, Check, ChevronDown } from "lucide-react"
 import { BottomNav } from "@/components/bottom-nav"
 import { ItemCard } from "@/components/item-card"
-import { categories } from "@/lib/data"
+import { TOP_CATEGORIES, GENDER_FILTERS, CATEGORIES } from "@/lib/constants"
 import { createClient } from "@/lib/supabase/client"
 import { listingToItem } from "@/lib/utils"
 import type { Item, Profile } from "@/lib/types"
@@ -35,12 +35,15 @@ export default function SearchPage() {
   const tCat = useTranslations('Categories')
   const tSize = useTranslations('Sizes')
   const tColors = useTranslations('Colors')
+  const tGender = useTranslations('Gender')
   const [searchMode, setSearchMode] = useState<"items" | "people">("items")
   const [query, setQuery] = useState("")
-  const [activeCategory, setActiveCategory] = useState("All")
+  const [activeCategory, setActiveCategory] = useState("all")
   const [activeSize, setActiveSize] = useState("All")
   const [activeBrand, setActiveBrand] = useState("All")
   const [activeColors, setActiveColors] = useState<string[]>([])
+  const [gender, setGender] = useState("women")
+  const [showDropdown, setShowDropdown] = useState(false)
   const [isColorOpen, setIsColorOpen] = useState(false)
   const [minPrice, setMinPrice] = useState(0)
   const [maxPrice, setMaxPrice] = useState(1000)
@@ -75,7 +78,15 @@ export default function SearchPage() {
         })
       }
     })
+
+    const savedGender = localStorage.getItem("swappfit_gender")
+    if (savedGender) setGender(savedGender)
   }, [supabase])
+
+  const handleGenderChange = (val: string) => {
+    setGender(val)
+    localStorage.setItem("swappfit_gender", val)
+  }
 
   function addRecentSearch(term: string) {
     if (!term.trim()) return
@@ -133,8 +144,16 @@ export default function SearchPage() {
           .eq('status', 'active')
           .order('created_at', { ascending: false })
 
-        if (activeCategory !== 'All') {
+        if (activeCategory !== 'all') {
           dbQuery = dbQuery.eq('category', activeCategory)
+        }
+
+        if (gender === 'women') {
+          dbQuery = dbQuery.in('gender', ['women', 'unisex', null]) // handle legacy nulls
+        } else if (gender === 'men') {
+          dbQuery = dbQuery.in('gender', ['men', 'unisex'])
+        } else if (gender === 'kids') {
+          dbQuery = dbQuery.eq('gender', 'kids')
         }
 
 
@@ -255,6 +274,26 @@ export default function SearchPage() {
           </button>
         ) : null}
       </div>
+
+      {/* Gender pills */}
+      {searchMode === "items" && (
+        <div className="mt-5 flex justify-center gap-3">
+          {GENDER_FILTERS.map(g => (
+            <button
+              key={g.value}
+              onClick={() => handleGenderChange(g.value)}
+              className={`flex items-center gap-1.5 rounded-full px-5 py-2 text-sm font-semibold transition-transform active:scale-95 ${
+                gender === g.value
+                  ? "bg-primary text-white shadow-[0_4px_12px_rgba(192,57,91,0.25)]"
+                  : "bg-muted text-muted-foreground"
+              }`}
+            >
+              <span>{g.emoji}</span>
+              <span>{tGender(g.value as any)}</span>
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Filter Panel - only for items mode */}
       {showFilters && searchMode === "items" && (
@@ -434,25 +473,76 @@ export default function SearchPage() {
 
       {/* Category pills - only for items mode */}
       {searchMode === "items" && (
-        <div className="flex flex-col gap-3 mt-4">
+        <div className="flex flex-col gap-3 mt-4 relative">
           <div className="hide-scrollbar -mx-5 flex gap-2.5 overflow-x-auto px-5">
-            {categories.map((cat) => {
-              const active = cat === activeCategory
+            <button
+              onClick={() => { setActiveCategory('all'); setActiveSize('All'); }}
+              className={`shrink-0 rounded-full px-4 py-2 text-sm font-medium transition-transform active:scale-95 ${
+                activeCategory === 'all'
+                  ? "bg-brand-gradient text-primary-foreground shadow-[0_8px_18px_rgba(192,57,91,0.22)]"
+                  : "border border-secondary bg-transparent text-foreground"
+              }`}
+            >
+              {tCat('all' as any)}
+            </button>
+
+            {TOP_CATEGORIES.map((catId) => {
+              const active = catId === activeCategory
               return (
                 <button
-                  key={cat}
-                  onClick={() => { setActiveCategory(cat); setActiveSize("All"); }}
+                  key={catId}
+                  onClick={() => { setActiveCategory(catId); setActiveSize('All'); }}
                   className={`shrink-0 rounded-full px-4 py-2 text-sm font-medium transition-transform active:scale-95 ${
                     active
                       ? "bg-brand-gradient text-primary-foreground shadow-[0_8px_18px_rgba(192,57,91,0.22)]"
                       : "border border-secondary bg-transparent text-foreground"
                   }`}
                 >
-                  {tCat(cat as any)}
+                  {tCat(catId as any)}
                 </button>
               )
             })}
+
+            {activeCategory !== 'all' && !TOP_CATEGORIES.includes(activeCategory) && (
+              <button
+                onClick={() => { setActiveCategory(activeCategory); setActiveSize('All'); }}
+                className="shrink-0 rounded-full px-4 py-2 text-sm font-medium transition-transform active:scale-95 bg-brand-gradient text-primary-foreground shadow-[0_8px_18px_rgba(192,57,91,0.22)]"
+              >
+                {tCat(activeCategory as any)}
+              </button>
+            )}
+
+            <button
+              onClick={() => setShowDropdown(!showDropdown)}
+              className={`shrink-0 rounded-full px-4 py-2 text-sm font-medium transition-transform active:scale-95 border border-secondary bg-transparent text-foreground flex items-center gap-1`}
+            >
+              {tCat("more" as any)} ▾
+            </button>
           </div>
+
+          {showDropdown && (
+            <>
+              <div className="fixed inset-0 z-40" onClick={() => setShowDropdown(false)} />
+              <div className="absolute right-5 top-[50px] z-50 mt-2 max-h-[300px] w-48 overflow-y-auto rounded-2xl bg-card p-2 shadow-xl border border-border">
+                {CATEGORIES.map((cat) => (
+                  <button
+                    key={cat.value}
+                    onClick={() => {
+                      setActiveCategory(cat.value)
+                      setActiveSize("All")
+                      setShowDropdown(false)
+                    }}
+                    className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm transition-colors ${
+                      activeCategory === cat.value ? 'bg-primary/10 text-primary font-bold' : 'hover:bg-muted text-foreground'
+                    }`}
+                  >
+                    <span className="text-lg">{cat.emoji}</span>
+                    <span className="flex-1">{tCat(cat.value as any) || cat.label}</span>
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
           
           {/* Active Colors Bar */}
           {activeColors.length > 0 && (

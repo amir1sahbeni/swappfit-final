@@ -201,6 +201,7 @@ export interface Item {
   brand: string
   size: string
   color?: string
+  gender?: string
   description: string
   sellerId: string
   distance: string

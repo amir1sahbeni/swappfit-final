@@ -9,6 +9,7 @@ import { acceptPurchase, rejectPurchase, completePurchase, cancelPurchase } from
 import { listingToItem } from "@/lib/utils"
 import { createClient } from "@/lib/supabase/client"
 import { useTranslations } from 'next-intl'
+import { TopProgressBar } from "@/components/top-progress-bar"
 
 export function PurchaseView({
   purchase: initialPurchase,
@@ -63,6 +64,12 @@ export function PurchaseView({
   const handleAction = async (action: "accept" | "reject" | "complete") => {
     setIsUpdating(true)
     setActionError(null)
+    const prevStatus = purchase.status
+    // Optimistic UI
+    if (action === "accept") setPurchase(prev => ({ ...prev, status: 'accepted' }))
+    if (action === "reject") setPurchase(prev => ({ ...prev, status: 'cancelled' }))
+    if (action === "complete") setPurchase(prev => ({ ...prev, status: 'completed' }))
+
     try {
       let res
       if (action === "accept") res = await acceptPurchase(purchase.id)
@@ -70,15 +77,16 @@ export function PurchaseView({
       else res = await completePurchase(purchase.id)
 
       if (res.success) {
+        router.refresh() // Force UI update immediately
         if (action === 'reject') {
           router.replace('/')
-        } else {
-          router.refresh() // Force UI update
         }
       } else {
+        setPurchase(prev => ({ ...prev, status: prevStatus })) // Revert
         setActionError(res.error ? tErr(res.error) : t("somethingWentWrong"))
       }
     } catch (err: any) {
+      setPurchase(prev => ({ ...prev, status: prevStatus })) // Revert
       setActionError(t("somethingWentWrong"))
     } finally {
       setIsUpdating(false)
@@ -88,15 +96,20 @@ export function PurchaseView({
   const handleCancel = async () => {
     setIsCancelling(true)
     setActionError(null)
+    const prevStatus = purchase.status
+    setPurchase(prev => ({ ...prev, status: 'cancelled' })) // Optimistic UI
     try {
       const res = await cancelPurchase(purchase.id)
       if (res.success) {
+        router.refresh()
         router.replace('/')
       } else {
+        setPurchase(prev => ({ ...prev, status: prevStatus })) // Revert
         setActionError(res.error ? tErr(res.error) : t("failedToCancel"))
         setCancelConfirm(false)
       }
     } catch (err: any) {
+      setPurchase(prev => ({ ...prev, status: prevStatus })) // Revert
       setActionError(err.message || "Something went wrong")
       setCancelConfirm(false)
     } finally {
@@ -127,8 +140,10 @@ export function PurchaseView({
   const buyerCanCancel = !isSeller && !isTerminal
 
   return (
-    <main className="mx-auto w-full max-w-[390px] min-h-dvh px-5 pb-28 pt-2">
-      <header className="flex items-center justify-between">
+    <>
+      <TopProgressBar isUpdating={isUpdating || isCancelling} />
+      <main className="mx-auto w-full max-w-[390px] min-h-dvh px-5 pb-28 pt-2">
+        <header className="flex items-center justify-between">
         <button onClick={() => router.back()} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-muted transition-transform active:scale-90">
           <ChevronLeft className="h-5 w-5 text-foreground rtl-flip" />
         </button>
@@ -358,5 +373,6 @@ export function PurchaseView({
         )}
       </div>
     </main>
+    </>
   )
 }

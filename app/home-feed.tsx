@@ -6,16 +6,31 @@ import { Search, SlidersHorizontal } from "lucide-react"
 import { BottomNav } from "@/components/bottom-nav"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { ItemCard, ItemCardHero } from "@/components/item-card"
-import { categories } from "@/lib/data"
+import { TOP_CATEGORIES, GENDER_FILTERS, CATEGORIES } from "@/lib/constants"
 import type { Item, Profile } from "@/lib/types"
 import { createClient } from "@/lib/supabase/client"
 import { useTranslations } from "next-intl"
 
 export function HomeFeed({ initialItems, followingIds = [], currentUserProfile }: { initialItems: Item[], followingIds?: string[], currentUserProfile?: Profile | null }) {
   const t = useTranslations("Home")
-  const [activeCategory, setActiveCategory] = useState("All")
+  const tCat = useTranslations("Categories")
+  const tGender = useTranslations("Gender")
+  const [activeCategory, setActiveCategory] = useState("all")
   const [showFollowing, setShowFollowing] = useState(false)
   const [items, setItems] = useState<Item[]>(initialItems)
+  const [gender, setGender] = useState("women")
+  const [showDropdown, setShowDropdown] = useState(false)
+
+  // Load persisted gender
+  useEffect(() => {
+    const saved = localStorage.getItem("swappfit_gender")
+    if (saved) setGender(saved)
+  }, [])
+
+  const handleGenderChange = (val: string) => {
+    setGender(val)
+    localStorage.setItem("swappfit_gender", val)
+  }
 
   // Real-time: remove listings that become sold/swapped/removed
   useEffect(() => {
@@ -72,6 +87,7 @@ export function HomeFeed({ initialItems, followingIds = [], currentUserProfile }
             profiles(id, name, avatar_url, governorate, city, precise_lat, precise_lng)
           `)
           .eq('status', 'active')
+          .neq('seller_id', user?.id || '')
           .order('created_at', { ascending: false })
           .limit(50)
         listings = res.data
@@ -96,11 +112,19 @@ export function HomeFeed({ initialItems, followingIds = [], currentUserProfile }
 
   // Pull-to-refresh is handled globally by SwipeHandler in layout.tsx
 
-  let filtered = activeCategory === "All" ? items : items.filter((i) => i.category === activeCategory)
+  let filtered = activeCategory === "all" ? items : items.filter((i) => i.category === activeCategory)
   
   if (showFollowing) {
     filtered = filtered.filter(i => followingIds.includes(i.sellerId))
   }
+  
+  // Apply gender filter
+  filtered = filtered.filter(i => {
+    if (gender === 'women') return i.gender === 'women' || i.gender === 'unisex' || !i.gender
+    if (gender === 'men') return i.gender === 'men' || i.gender === 'unisex'
+    if (gender === 'kids') return i.gender === 'kids'
+    return true
+  })
   
   const remaining = filtered
   
@@ -131,34 +155,105 @@ export function HomeFeed({ initialItems, followingIds = [], currentUserProfile }
           <SlidersHorizontal className="h-5 w-5 shrink-0 text-primary" />
         </Link>
 
-        {/* Category pills */}
-        <div className="hide-scrollbar -mx-5 mt-5 flex gap-2.5 overflow-x-auto px-5">
-          <button
-            onClick={() => setShowFollowing(!showFollowing)}
-            className={`shrink-0 rounded-full px-4 py-2 text-sm font-medium transition-transform active:scale-95 ${
-              showFollowing
-                ? "bg-brand-gradient text-primary-foreground shadow-[0_8px_18px_rgba(192,57,91,0.22)]"
-                : "border border-secondary bg-transparent text-foreground"
-            }`}
-          >
-            {t("following")}
-          </button>
-          {categories.map((cat) => {
-            const active = cat === activeCategory
-            return (
+        {/* Gender pills */}
+        <div className="mt-5 flex justify-center gap-3">
+          {GENDER_FILTERS.map(g => (
+            <button
+              key={g.value}
+              onClick={() => handleGenderChange(g.value)}
+              className={`flex items-center gap-1.5 rounded-full px-5 py-2 text-sm font-semibold transition-transform active:scale-95 ${
+                gender === g.value
+                  ? "bg-primary text-white shadow-[0_4px_12px_rgba(192,57,91,0.25)]"
+                  : "bg-muted text-muted-foreground"
+              }`}
+            >
+              <span>{g.emoji}</span>
+              <span>{tGender(g.value as any)}</span>
+            </button>
+          ))}
+        </div>
+
+        <div className="relative mt-5">
+          <div className="hide-scrollbar -mx-5 flex gap-2.5 overflow-x-auto px-5">
+            <button
+              onClick={() => setShowFollowing(!showFollowing)}
+              className={`shrink-0 rounded-full px-4 py-2 text-sm font-medium transition-transform active:scale-95 ${
+                showFollowing
+                  ? "bg-brand-gradient text-primary-foreground shadow-[0_8px_18px_rgba(192,57,91,0.22)]"
+                  : "border border-secondary bg-transparent text-foreground"
+              }`}
+            >
+              {t("following")}
+            </button>
+            
+            <button
+              onClick={() => setActiveCategory('all')}
+              className={`shrink-0 rounded-full px-4 py-2 text-sm font-medium transition-transform active:scale-95 ${
+                activeCategory === 'all'
+                  ? "bg-brand-gradient text-primary-foreground shadow-[0_8px_18px_rgba(192,57,91,0.22)]"
+                  : "border border-secondary bg-transparent text-foreground"
+              }`}
+            >
+              {tCat('all' as any)}
+            </button>
+
+            {TOP_CATEGORIES.map((catId) => {
+              const active = catId === activeCategory
+              return (
+                <button
+                  key={catId}
+                  onClick={() => setActiveCategory(catId)}
+                  className={`shrink-0 rounded-full px-4 py-2 text-sm font-medium transition-transform active:scale-95 ${
+                    active
+                      ? "bg-brand-gradient text-primary-foreground shadow-[0_8px_18px_rgba(192,57,91,0.22)]"
+                      : "border border-secondary bg-transparent text-foreground"
+                  }`}
+                >
+                  {tCat(catId as any)}
+                </button>
+              )
+            })}
+            
+            {/* If the active category is not in TOP_CATEGORIES and not 'all', show it as a selected pill before More */}
+            {activeCategory !== 'all' && !TOP_CATEGORIES.includes(activeCategory) && (
               <button
-                key={cat}
-                onClick={() => setActiveCategory(cat)}
-                className={`shrink-0 rounded-full px-4 py-2 text-sm font-medium transition-transform active:scale-95 ${
-                  active
-                    ? "bg-brand-gradient text-primary-foreground shadow-[0_8px_18px_rgba(192,57,91,0.22)]"
-                    : "border border-secondary bg-transparent text-foreground"
-                }`}
+                onClick={() => setActiveCategory(activeCategory)}
+                className="shrink-0 rounded-full px-4 py-2 text-sm font-medium transition-transform active:scale-95 bg-brand-gradient text-primary-foreground shadow-[0_8px_18px_rgba(192,57,91,0.22)]"
               >
-                {cat}
+                {tCat(activeCategory as any)}
               </button>
-            )
-          })}
+            )}
+
+            <button
+              onClick={() => setShowDropdown(!showDropdown)}
+              className={`shrink-0 rounded-full px-4 py-2 text-sm font-medium transition-transform active:scale-95 border border-secondary bg-transparent text-foreground flex items-center gap-1`}
+            >
+              {tCat('more' as any)} ▾
+            </button>
+          </div>
+
+          {showDropdown && (
+            <>
+              <div className="fixed inset-0 z-40" onClick={() => setShowDropdown(false)} />
+              <div className="absolute right-5 top-full z-50 mt-2 max-h-[300px] w-48 overflow-y-auto rounded-2xl bg-card p-2 shadow-xl border border-border">
+                {CATEGORIES.map((cat) => (
+                  <button
+                    key={cat.value}
+                    onClick={() => {
+                      setActiveCategory(cat.value)
+                      setShowDropdown(false)
+                    }}
+                    className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm transition-colors ${
+                      activeCategory === cat.value ? 'bg-primary/10 text-primary font-bold' : 'hover:bg-muted text-foreground'
+                    }`}
+                  >
+                    <span className="text-lg">{cat.emoji}</span>
+                    <span className="flex-1">{tCat(cat.value as any) || cat.label}</span>
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
         </div>
 
         {filtered.length === 0 ? (

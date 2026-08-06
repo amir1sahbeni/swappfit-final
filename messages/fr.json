@@ -499,13 +499,28 @@
     "message": "Message {name}"
   },
   "Categories": {
-    "All": "Tout",
-    "Tops": "Hauts",
-    "Bottoms": "Bas",
-    "Shoes": "Chaussures",
-    "Outerwear": "Vêtements d'extérieur",
-    "Accessories": "Accessoires",
-    "Jackets": "Vestes"
+    "all": "Tout",
+    "tops": "Hauts",
+    "bottoms": "Bas",
+    "dresses": "Robes",
+    "jackets": "Vestes & Manteaux",
+    "shoes": "Chaussures",
+    "heels": "Talons & Sandales",
+    "sportswear": "Tenues de sport",
+    "formal": "Costumes & Soirée",
+    "traditional": "Tenues traditionnelles",
+    "bags": "Sacs",
+    "watches": "Montres & Bijoux",
+    "accessories": "Accessoires",
+    "swimwear": "Maillots de bain",
+    "more": "Plus"
+  },
+  "Gender": {
+    "women": "Femmes",
+    "men": "Hommes",
+    "kids": "Enfants",
+    "unisex": "Unisexe",
+    "whoIsThisFor": "Pour qui est-ce ?"
   },
   "Sizes": {
     "Kids (Under 35)": "Enfants (Moins de 35)",

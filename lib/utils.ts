@@ -95,6 +95,7 @@ export function listingToItem(listing: Listing, currentUserProfile?: Profile | n
     brand: listing.brand,
     size: listing.size,
     color: listing.color,
+    gender: listing.gender,
     description: listing.description || "",
     sellerId: listing.seller_id,
     distance: (listing.profiles?.city && listing.profiles?.governorate) ? `${listing.profiles.city}, ${listing.profiles.governorate}` : (listing.profiles?.location ?? ''),

@@ -188,7 +188,7 @@ export async function updateProposalStatus(
     .select('listing_id')
     .eq('proposal_id', proposalId)
 
-  const allItemIds = proposalItems ? proposalItems.map((i: any) => i.listing_id) : [proposal.offered_item_id, proposal.wanted_item_id]
+  const allItemIds = proposalItems && proposalItems.length > 0 ? proposalItems.map((i: any) => i.listing_id) : [proposal.offered_item_id, proposal.wanted_item_id].filter(Boolean)
 
   // Fetch listing names for notifications
   const listingIds = [...new Set(allItemIds)]
@@ -445,7 +445,7 @@ export async function cancelProposal(
     .select('listing_id')
     .eq('proposal_id', proposalId)
 
-  const allItemIds = proposalItems ? proposalItems.map((i: any) => i.listing_id) : [proposal.offered_item_id, proposal.wanted_item_id]
+  const allItemIds = proposalItems && proposalItems.length > 0 ? proposalItems.map((i: any) => i.listing_id) : [proposal.offered_item_id, proposal.wanted_item_id].filter(Boolean)
 
   // Fetch listing names for notifications
   let wantedItemName = 'Item'

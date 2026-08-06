@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Camera, Plus, Check, Loader2, X, ChevronDown } from "lucide-react"
 import { PageHeader } from "@/components/page-header"
-import { categories } from "@/lib/data"
+import { CATEGORIES, GENDER_FILTERS } from "@/lib/constants"
 import { createListing } from "@/app/actions/listings"
 import { createClient } from "@/lib/supabase/client"
 import { useAppContext } from "@/components/app-context"
@@ -14,7 +14,6 @@ import { compressImage } from "@/lib/utils/compressImage"
 
 const MAX_PHOTOS = 5
 const conditions = ["New", "Like New", "Excellent", "Good", "Fair"]
-const formCategories = categories.filter((c) => c !== "All")
 
 const STANDARD_COLORS = [
   { name: 'Black', hex: '#000000' },
@@ -39,13 +38,15 @@ export default function CreateListingPage() {
   const t = useTranslations('Create')
   const tAuth = useTranslations('Auth')
   const tColors = useTranslations('Colors')
+  const tGender = useTranslations('Gender')
   const router = useRouter()
   const [name, setName] = useState("")
   const [brand, setBrand] = useState("")
   const [size, setSize] = useState("")
   const [price, setPrice] = useState("")
   const [description, setDescription] = useState("")
-  const [category, setCategory] = useState("Tops")
+  const [category, setCategory] = useState("tops")
+  const [gender, setGender] = useState("women")
   const [color, setColor] = useState("")
   const [isColorOpen, setIsColorOpen] = useState(false)
   const [condition, setCondition] = useState("Like New")
@@ -119,11 +120,11 @@ export default function CreateListingPage() {
   }
 
   const getSizes = (cat: string) => {
-    if (cat === "Shoes") return ["Kids (Under 35)", "35", "36", "37", "38", "39", "40", "41", "42", "43", "44", "45", "46", "47", "48"]
-    if (cat === "Trousers" || cat === "Bottoms") {
+    if (cat === "shoes") return ["Kids (Under 35)", "35", "36", "37", "38", "39", "40", "41", "42", "43", "44", "45", "46", "47", "48"]
+    if (cat === "bottoms") {
       return ["Kids", "32", "34", "36", "38", "40", "42", "44", "46", "48", "50"]
     }
-    if (cat === "Accessories") return ["One Size", "Adjustable", "XS", "S", "M", "L", "XL"]
+    if (cat === "accessories" || cat === "bags" || cat === "watches") return ["One Size", "Adjustable", "XS", "S", "M", "L", "XL"]
     return ["Kids", "XS", "S", "M", "L", "XL", "XXL", "3XL"]
   }
 
@@ -174,9 +175,9 @@ export default function CreateListingPage() {
 
       // 3. Create listing
       setSubmitStatus('publishing')
-      const sizeType = (category === "Trousers" || category === "Bottoms") 
+      const sizeType = (category === "bottoms") 
           ? "mixed"
-          : (category === "Shoes" ? "numeric" : "letter")
+          : (category === "shoes" ? "numeric" : "letter")
           
       await createListing({
         name,
@@ -189,7 +190,7 @@ export default function CreateListingPage() {
         color,
         images: uploadedUrls,
         size_type: sizeType,
-        gender: undefined,
+        gender,
         lat,
         lng
       })
@@ -306,11 +307,42 @@ export default function CreateListingPage() {
 
         <Field label={t('category')}>
           <div className="hide-scrollbar -mx-5 flex gap-2.5 overflow-x-auto px-5">
-            {formCategories.map((cat) => (
-              <Chip key={cat} active={cat === category} onClick={() => { setCategory(cat); setSize(""); }}>
-                {cat}
+            {CATEGORIES.map((cat) => (
+              <Chip key={cat.value} active={cat.value === category} onClick={() => { setCategory(cat.value); setSize(""); }}>
+                <span className="mr-1">{cat.emoji}</span>{cat.label}
               </Chip>
             ))}
+          </div>
+        </Field>
+
+        <Field label={tGender('whoIsThisFor')}>
+          <div className="flex gap-3">
+            {GENDER_FILTERS.map((g) => (
+              <button
+                key={g.value}
+                type="button"
+                onClick={() => setGender(g.value)}
+                className={`flex flex-1 items-center justify-center gap-1.5 rounded-xl py-2.5 text-sm font-semibold transition-transform active:scale-95 border ${
+                  gender === g.value
+                    ? "bg-primary text-white border-primary shadow-[0_4px_12px_rgba(192,57,91,0.25)]"
+                    : "bg-muted text-muted-foreground border-transparent"
+                }`}
+              >
+                <span>{g.emoji}</span>
+                <span>{tGender(g.value as any)}</span>
+              </button>
+            ))}
+            <button
+              type="button"
+              onClick={() => setGender("unisex")}
+              className={`flex flex-1 items-center justify-center rounded-xl py-2.5 text-sm font-semibold transition-transform active:scale-95 border ${
+                gender === 'unisex'
+                  ? "bg-primary text-white border-primary shadow-[0_4px_12px_rgba(192,57,91,0.25)]"
+                  : "bg-muted text-muted-foreground border-transparent"
+              }`}
+            >
+              {tGender('unisex')}
+            </button>
           </div>
         </Field>
 

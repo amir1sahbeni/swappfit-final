@@ -499,13 +499,28 @@
     "message": "Message {name}"
   },
   "Categories": {
-    "All": "All",
-    "Tops": "Tops",
-    "Bottoms": "Bottoms",
-    "Shoes": "Shoes",
-    "Outerwear": "Outerwear",
-    "Accessories": "Accessories",
-    "Jackets": "Jackets"
+    "all": "All",
+    "tops": "Tops",
+    "bottoms": "Bottoms",
+    "dresses": "Dresses",
+    "jackets": "Jackets & Coats",
+    "shoes": "Shoes",
+    "heels": "Heels & Sandals",
+    "sportswear": "Sportswear",
+    "formal": "Formal & Suits",
+    "traditional": "Traditional",
+    "bags": "Bags",
+    "watches": "Watches & Jewellery",
+    "accessories": "Accessories",
+    "swimwear": "Swimwear",
+    "more": "More"
+  },
+  "Gender": {
+    "women": "Women",
+    "men": "Men",
+    "kids": "Kids",
+    "unisex": "Unisex",
+    "whoIsThisFor": "Who is this for?"
   },
   "Sizes": {
     "Kids (Under 35)": "Kids (Under 35)",

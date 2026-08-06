@@ -499,13 +499,28 @@
     "message": "رسالة {name}"
   },
   "Categories": {
-    "All": "الكل",
-    "Tops": "بلايز",
-    "Bottoms": "بناطيل",
-    "Shoes": "أحذية",
-    "Outerwear": "ملابس خارجية",
-    "Accessories": "إكسسوارات",
-    "Jackets": "جاكيتات"
+    "all": "الكل",
+    "tops": "بلايز",
+    "bottoms": "بناطيل",
+    "dresses": "فساتين",
+    "jackets": "جاكيتات ومعاطف",
+    "shoes": "أحذية",
+    "heels": "كعب وصنادل",
+    "sportswear": "ملابس رياضية",
+    "formal": "رسمي وبدل",
+    "traditional": "تقليدي",
+    "bags": "حقائب",
+    "watches": "ساعات ومجوهرات",
+    "accessories": "إكسسوارات",
+    "swimwear": "ملابس سباحة",
+    "more": "المزيد"
+  },
+  "Gender": {
+    "women": "نساء",
+    "men": "رجال",
+    "kids": "أطفال",
+    "unisex": "للجنسين",
+    "whoIsThisFor": "لمن هذا؟"
   },
   "Sizes": {
     "Kids (Under 35)": "أطفال (أقل من 35)",

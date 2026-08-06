@@ -15,6 +15,7 @@ import { useTranslations } from 'next-intl'
 export function ItemDetailView({ item, seller, initialSaved, isOwner, currentUserProfile }: { item: Item; seller: Seller; initialSaved: boolean; isOwner?: boolean; currentUserProfile?: Profile | null }) {
   const t = useTranslations('ItemDetail')
   const tColors = useTranslations('Colors')
+  const tGender = useTranslations('Gender')
   const router = useRouter()
   const [, startTransition] = useTransition()
   const [saved, setSaved] = useState(initialSaved)
@@ -341,6 +342,11 @@ export function ItemDetailView({ item, seller, initialSaved, isOwner, currentUse
           <span className="rounded-full bg-muted px-3 py-1.5 text-xs font-medium text-muted-foreground">
             {item.postedAt}
           </span>
+          {item.gender && (
+            <span className="rounded-full bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary">
+              {tGender(item.gender as any)}
+            </span>
+          )}
         </div>
 
         {/* Description */}

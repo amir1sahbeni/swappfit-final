@@ -34,18 +34,16 @@ export async function submitReview(data: {
     .eq('reviewee_id', data.revieweeId)
   if (aggErr) throw new Error(aggErr.message)
 
-  const count = allReviews.length
-  const averageRating = count > 0
-    ? allReviews.reduce((sum, r) => sum + r.rating, 0) / count
-    : 0
-
-  await supabase
-    .from('profiles')
-    .update({ 
-      rating: Math.round(averageRating * 10) / 10, // Round to 1 decimal
-      review_count: count 
-    })
-    .eq('id', data.revieweeId)
+  if (allReviews && allReviews.length > 0) {
+    const avg = allReviews.reduce((sum, r) => sum + r.rating, 0) / allReviews.length
+    await supabase
+      .from('profiles')
+      .update({
+        rating: Math.round(avg * 10) / 10,
+        review_count: allReviews.length
+      })
+      .eq('id', data.revieweeId)
+  }
 
   // Notification
   await supabase.from('notifications').insert({

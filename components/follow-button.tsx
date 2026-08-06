@@ -22,19 +22,21 @@ export function FollowButton({
   const handleFollowToggle = async () => {
     if (loading) return
     setLoading(true)
+    setIsFollowing(!isFollowing) // Optimistic UI
 
     try {
       const { toggleFollow } = await import('@/app/actions/follows')
       const result = await toggleFollow(followingId, isFollowing)
       
       if (result.success) {
-        setIsFollowing(!isFollowing)
         router.refresh() // Force UI update
       } else {
+        setIsFollowing(isFollowing) // Revert on failure
         alert("Failed to update follow status: " + (result.error || "Unknown error"))
       }
     } catch (err: any) {
       console.error("Follow error:", err)
+      setIsFollowing(isFollowing) // Revert on failure
       alert("Failed to update follow status: " + (err.message || "Unknown error"))
     } finally {
       setLoading(false)
