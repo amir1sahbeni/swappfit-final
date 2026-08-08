@@ -15,10 +15,10 @@ export async function sendSupportEmail(data: {
     const resend = new Resend(process.env.RESEND_API_KEY)
 
     const { data: resendData, error } = await resend.emails.send({
-      from: 'Support <onboarding@resend.dev>',
-      to: 'amir.sahbeni1@gmail.com',
+      from: 'SwappFit Support <support@swappfit.me>',
+      to: ['kakashi1god@gmail.com'],
       replyTo: data.userEmail,
-      subject: `Support: ${data.subject}`,
+      subject: `[SwappFit Support] ${data.subject}`,
       html: `
         <p><strong>Name:</strong> ${data.userName}</p>
         <p><strong>Email:</strong> ${data.userEmail}</p>
