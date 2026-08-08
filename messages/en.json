@@ -326,7 +326,7 @@
     "swapProblem": "Swap Problem",
     "paymentIssue": "Payment Issue",
     "other": "Other",
-    "successMessage": "Message sent! We'll get back to you within 24 hours.",
+    "successMessage": "Message sent! We'll get back to you within 24 hours. Check your email for our reply.",
     "errorMessage": "Failed to send message. Please try again later.",
     "messageTooShort": "Message must be at least 20 characters."
   },

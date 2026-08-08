@@ -326,7 +326,7 @@
     "swapProblem": "Problème d'échange",
     "paymentIssue": "Problème de paiement",
     "other": "Autre",
-    "successMessage": "Message envoyé ! Nous vous répondrons dans les 24 heures.",
+    "successMessage": "Message envoyé ! Nous vous répondrons dans les 24 heures. Consultez votre boîte mail pour notre réponse.",
     "errorMessage": "Échec de l'envoi du message. Veuillez réessayer plus tard.",
     "messageTooShort": "Le message doit contenir au moins 20 caractères."
   },
