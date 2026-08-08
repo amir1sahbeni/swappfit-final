@@ -16,7 +16,7 @@ export async function sendSupportEmail(data: {
 
     const { data: resendData, error } = await resend.emails.send({
       from: 'Support <onboarding@resend.dev>',
-      to: 'kakashi1god@gmail.com',
+      to: 'amir.sahbeni1@gmail.com',
       replyTo: data.userEmail,
       subject: `Support: ${data.subject}`,
       html: `
