@@ -24,11 +24,7 @@ export function SupportForm({ userEmail, userName }: { userEmail: string; userNa
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (message.length < 20) {
-      setStatus('error')
-      setErrorMsg(t('messageTooShort'))
-      return
-    }
+
 
     setIsSubmitting(true)
     setErrorMsg('')
