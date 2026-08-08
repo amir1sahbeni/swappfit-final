@@ -72,6 +72,7 @@ export async function getUserPurchases(userId: string): Promise<Purchase[]> {
     .from('purchases')
     .select('id, buyer_id, seller_id, status, total_price, created_at, updated_at')
     .or(`buyer_id.eq.${userId},seller_id.eq.${userId}`)
+    .not('hidden_for', 'cs', `{${userId}}`)
     .order('created_at', { ascending: false })
 
   if (error || !purchases) return []

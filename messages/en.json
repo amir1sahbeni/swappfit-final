@@ -317,7 +317,18 @@
     "user": "User",
     "unknown": "Unknown",
     "noEmail": "No email",
-    "describeIssue": "Please describe your issue below:"
+    "describeIssue": "Please describe your issue below:",
+    "subject": "Subject",
+    "message": "Message",
+    "sendMessage": "Send Message",
+    "bugReport": "Bug Report",
+    "accountIssue": "Account Issue",
+    "swapProblem": "Swap Problem",
+    "paymentIssue": "Payment Issue",
+    "other": "Other",
+    "successMessage": "Message sent! We'll get back to you within 24 hours.",
+    "errorMessage": "Failed to send message. Please try again later.",
+    "messageTooShort": "Message must be at least 20 characters."
   },
   "Chats": {
     "title": "Messages",

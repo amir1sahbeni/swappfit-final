@@ -4,14 +4,15 @@ import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import { removeSwapProposal, removePurchaseFromHistory } from '@/app/actions/swaps'
+import { removeSwapProposal, removePurchaseFromHistory, hideAllSwapsFromHistory } from '@/app/actions/swaps'
 import { useTranslations } from 'next-intl'
-import { Trash2 } from 'lucide-react'
+import { Trash2, Trash } from 'lucide-react'
 
 export function SwapsList({ history, userId }: { history: any[], userId: string }) {
   const t = useTranslations('Swaps')
   const router = useRouter()
   const [localHistory, setLocalHistory] = useState(history)
+  const [isClearing, setIsClearing] = useState(false)
 
   const handleDeleteSwap = async (id: string, type: 'swap' | 'purchase', status: string) => {
     const isActive = type === 'swap'
@@ -38,12 +39,53 @@ export function SwapsList({ history, userId }: { history: any[], userId: string 
     }
   }
 
+  const handleClearHistory = async () => {
+    if (!confirm(t('clearAllConfirm', { fallback: 'Clear all swap history? This cannot be undone.' }))) return
+
+    try {
+      setIsClearing(true)
+      
+      // Optimistic update: remove completed, cancelled, declined
+      setLocalHistory(localHistory.filter(item => {
+        const isActive = item.type === 'swap'
+          ? ['pending', 'accepted'].includes(item.status)
+          : ['pending_seller_approval', 'accepted'].includes(item.status)
+        return isActive
+      }))
+      
+      await hideAllSwapsFromHistory()
+      router.refresh()
+    } catch (error: any) {
+      alert(t('failedToClear') + error.message)
+    } finally {
+      setIsClearing(false)
+    }
+  }
+
   if (localHistory.length === 0) {
     return <p className="mt-8 text-center text-sm text-muted-foreground">{t('noSwaps')}</p>
   }
 
+  const hasHideableHistory = localHistory.some(item => {
+    return item.type === 'swap' 
+      ? !['pending', 'accepted'].includes(item.status)
+      : !['pending_seller_approval', 'accepted'].includes(item.status)
+  })
+
   return (
     <div className="mt-4 flex flex-col gap-3">
+      {hasHideableHistory && (
+        <div className="flex justify-end mb-2">
+          <button
+            onClick={handleClearHistory}
+            disabled={isClearing}
+            className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors active:scale-95"
+          >
+            <Trash className="h-3.5 w-3.5" />
+            {t('clearHistory', { fallback: 'Clear History' })}
+          </button>
+        </div>
+      )}
       {localHistory.map((item) => {
         if (item.type === 'swap') {
           const proposal = item

@@ -94,6 +94,7 @@ export async function getUserProposals(userId: string): Promise<SwapProposal[]> 
     .from('swap_proposals')
     .select('id, proposer_id, receiver_id, offered_item_id, wanted_item_id, status, note, completed_at, cancelled_at, created_at, updated_at, proposer_confirmed, receiver_confirmed')
     .or(`proposer_id.eq.${userId},receiver_id.eq.${userId}`)
+    .not('hidden_for', 'cs', `{${userId}}`)
     .order('created_at', { ascending: false })
     .limit(100)
 

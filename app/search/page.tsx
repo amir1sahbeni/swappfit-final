@@ -374,7 +374,7 @@ export default function SearchPage() {
                         <div key={idx} className="flex items-center gap-1.5">
                           {idx > 0 && <span className="text-muted-foreground/50">,</span>}
                           <div className="h-3 w-3 shrink-0 rounded-full border border-border/50" style={{ background: c.hex }} />
-                          <span className="truncate">{tColors(colorName as any)}</span>
+                          <span className="truncate">{colorName}</span>
                         </div>
                       )
                     })}
@@ -417,7 +417,7 @@ export default function SearchPage() {
                           className="h-5 w-5 rounded-full border border-border/50" 
                           style={{ background: c.hex }} 
                         />
-                        <span>{tColors(c.name as any)}</span>
+                        <span>{c.name}</span>
                         {isSelected && <Check className="h-4 w-4 ml-auto text-primary" />}
                       </button>
                     )
@@ -450,7 +450,7 @@ export default function SearchPage() {
                   const val = Math.min(Number(e.target.value), maxPrice - 10)
                   setMinPrice(val)
                 }}
-                className="absolute w-full h-1 opacity-0 cursor-pointer pointer-events-auto"
+                className="absolute w-full h-1 opacity-0 pointer-events-none [&::-webkit-slider-thumb]:pointer-events-auto [&::-moz-range-thumb]:pointer-events-auto"
                 style={{ zIndex: minPrice > 1000 - 100 ? 5 : 3 }}
               />
               <input 
@@ -461,7 +461,7 @@ export default function SearchPage() {
                   const val = Math.max(Number(e.target.value), minPrice + 10)
                   setMaxPrice(val)
                 }}
-                className="absolute w-full h-1 opacity-0 cursor-pointer pointer-events-auto z-4"
+                className="absolute w-full h-1 opacity-0 pointer-events-none [&::-webkit-slider-thumb]:pointer-events-auto [&::-moz-range-thumb]:pointer-events-auto z-4"
               />
               {/* Thumbs for visual representation */}
               <div className="absolute w-4 h-4 bg-primary rounded-full shadow top-1/2 -mt-2 pointer-events-none" style={{ left: `calc(${(minPrice / 1000) * 100}% - 8px)` }} />
@@ -558,7 +558,7 @@ export default function SearchPage() {
                     className="shrink-0 flex items-center gap-1.5 rounded-full px-2 py-1 pr-3 text-xs font-medium border border-primary bg-primary/5 transition-transform active:scale-95"
                   >
                     <div className="w-3.5 h-3.5 rounded-full border border-border/50" style={{ background: colorDef.hex }} />
-                    <span className="text-primary">{tColors(colorName as any)}</span>
+                    <span className="text-primary">{colorName}</span>
                     <X className="h-3 w-3 text-primary ml-0.5" />
                   </button>
                 )

@@ -15,7 +15,7 @@ export async function removeSwapProposal(id: string): Promise<{ success: boolean
 
   const { data: proposal } = await supabase
     .from('swap_proposals')
-    .select('status, proposer_id')
+    .select('status, proposer_id, hidden_for')
     .eq('id', id)
     .maybeSingle()
 
@@ -27,12 +27,12 @@ export async function removeSwapProposal(id: string): Promise<{ success: boolean
     return { success: true }
   }
 
-  // For terminal states or if receiver, just remove from view (hard delete)
+  // For terminal states or if receiver, hide from view by updating hidden_for
+  const currentHidden = proposal.hidden_for || []
   await supabase
     .from('swap_proposals')
-    .delete()
+    .update({ hidden_for: Array.from(new Set([...currentHidden, user.id])) })
     .eq('id', id)
-    .or(`proposer_id.eq.${user.id},receiver_id.eq.${user.id}`)
 
   revalidatePath('/swaps')
   return { success: true }
@@ -47,7 +47,7 @@ export async function removePurchaseFromHistory(id: string): Promise<{ success: 
 
   const { data: purchase } = await supabase
     .from('purchases')
-    .select('status, buyer_id')
+    .select('status, buyer_id, hidden_for')
     .eq('id', id)
     .maybeSingle()
 
@@ -58,12 +58,57 @@ export async function removePurchaseFromHistory(id: string): Promise<{ success: 
     return cancelPurchase(id)
   }
 
-  // Terminal state — just delete the row
+  // Terminal state — hide it
+  const currentHidden = purchase.hidden_for || []
   await supabase
     .from('purchases')
-    .delete()
+    .update({ hidden_for: Array.from(new Set([...currentHidden, user.id])) })
     .eq('id', id)
+
+  revalidatePath('/swaps')
+  return { success: true }
+}
+
+export async function hideAllSwapsFromHistory(): Promise<{ success: boolean; error?: string }> {
+  const supabase = await createServerClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect('/auth')
+
+  // Hide completed, cancelled, declined proposals
+  const { data: proposals } = await supabase
+    .from('swap_proposals')
+    .select('id, hidden_for')
+    .in('status', ['completed', 'cancelled', 'declined'])
+    .or(`proposer_id.eq.${user.id},receiver_id.eq.${user.id}`)
+
+  if (proposals && proposals.length > 0) {
+    for (const p of proposals) {
+      if (!p.hidden_for?.includes(user.id)) {
+        await supabase
+          .from('swap_proposals')
+          .update({ hidden_for: [...(p.hidden_for || []), user.id] })
+          .eq('id', p.id)
+      }
+    }
+  }
+
+  // Hide completed, cancelled, declined purchases
+  const { data: purchases } = await supabase
+    .from('purchases')
+    .select('id, hidden_for')
+    .in('status', ['completed', 'cancelled', 'declined'])
     .or(`buyer_id.eq.${user.id},seller_id.eq.${user.id}`)
+
+  if (purchases && purchases.length > 0) {
+    for (const p of purchases) {
+      if (!p.hidden_for?.includes(user.id)) {
+        await supabase
+          .from('purchases')
+          .update({ hidden_for: [...(p.hidden_for || []), user.id] })
+          .eq('id', p.id)
+      }
+    }
+  }
 
   revalidatePath('/swaps')
   return { success: true }

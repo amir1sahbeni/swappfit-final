@@ -87,7 +87,6 @@ export function HomeFeed({ initialItems, followingIds = [], currentUserProfile }
             profiles(id, name, avatar_url, governorate, city, precise_lat, precise_lng)
           `)
           .eq('status', 'active')
-          .neq('seller_id', user?.id || '')
           .order('created_at', { ascending: false })
           .limit(50)
         listings = res.data

@@ -317,7 +317,18 @@
     "user": "Utilisateur",
     "unknown": "Inconnu",
     "noEmail": "Pas d'email",
-    "describeIssue": "Décris ton problème ci-dessous:"
+    "describeIssue": "Décris ton problème ci-dessous:",
+    "subject": "Sujet",
+    "message": "Message",
+    "sendMessage": "Envoyer le message",
+    "bugReport": "Signaler un bug",
+    "accountIssue": "Problème de compte",
+    "swapProblem": "Problème d'échange",
+    "paymentIssue": "Problème de paiement",
+    "other": "Autre",
+    "successMessage": "Message envoyé ! Nous vous répondrons dans les 24 heures.",
+    "errorMessage": "Échec de l'envoi du message. Veuillez réessayer plus tard.",
+    "messageTooShort": "Le message doit contenir au moins 20 caractères."
   },
   "Chats": {
     "title": "Messages",

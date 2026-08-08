@@ -306,12 +306,22 @@ export default function CreateListingPage() {
         </Field>
 
         <Field label={t('category')}>
-          <div className="hide-scrollbar -mx-5 flex gap-2.5 overflow-x-auto px-5">
-            {CATEGORIES.map((cat) => (
-              <Chip key={cat.value} active={cat.value === category} onClick={() => { setCategory(cat.value); setSize(""); }}>
-                <span className="mr-1">{cat.emoji}</span>{cat.label}
-              </Chip>
-            ))}
+          <div className="relative">
+            <select
+              value={category}
+              onChange={(e) => { setCategory(e.target.value); setSize(""); }}
+              className="w-full appearance-none rounded-xl bg-muted px-4 py-3 text-sm font-medium text-foreground outline-none transition-all focus:ring-2 focus:ring-ring"
+            >
+              <option value="" disabled>Select Category</option>
+              {CATEGORIES.map((cat) => (
+                <option key={cat.value} value={cat.value}>
+                  {cat.emoji} {cat.label}
+                </option>
+              ))}
+            </select>
+            <div className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground">
+              <ChevronDown className="h-4 w-4 opacity-50" />
+            </div>
           </div>
         </Field>
 
@@ -324,7 +334,7 @@ export default function CreateListingPage() {
                 onClick={() => setGender(g.value)}
                 className={`flex flex-1 items-center justify-center gap-1.5 rounded-xl py-2.5 text-sm font-semibold transition-transform active:scale-95 border ${
                   gender === g.value
-                    ? "bg-primary text-white border-primary shadow-[0_4px_12px_rgba(192,57,91,0.25)]"
+                    ? "bg-brand-gradient text-primary-foreground shadow-[0_8px_18px_rgba(192,57,91,0.22)] border-transparent"
                     : "bg-muted text-muted-foreground border-transparent"
                 }`}
               >
@@ -337,7 +347,7 @@ export default function CreateListingPage() {
               onClick={() => setGender("unisex")}
               className={`flex flex-1 items-center justify-center rounded-xl py-2.5 text-sm font-semibold transition-transform active:scale-95 border ${
                 gender === 'unisex'
-                  ? "bg-primary text-white border-primary shadow-[0_4px_12px_rgba(192,57,91,0.25)]"
+                  ? "bg-brand-gradient text-primary-foreground shadow-[0_8px_18px_rgba(192,57,91,0.22)] border-transparent"
                   : "bg-muted text-muted-foreground border-transparent"
               }`}
             >
@@ -359,7 +369,7 @@ export default function CreateListingPage() {
                     className="h-5 w-5 rounded-full border border-border/50" 
                     style={{ background: STANDARD_COLORS.find(c => c.name === color)?.hex }} 
                   />
-                  <span>{tColors(color as any)}</span>
+                  <span>{color}</span>
                 </div>
               ) : (
                 <span>{t('placeholderColor')}</span>
@@ -393,7 +403,7 @@ export default function CreateListingPage() {
                         className="h-5 w-5 rounded-full border border-border/50" 
                         style={{ background: c.hex }} 
                       />
-                      <span>{tColors(c.name as any)}</span>
+                      <span>{c.name}</span>
                       {color === c.name && <Check className="h-4 w-4 ml-auto text-primary" />}
                     </button>
                   ))}
