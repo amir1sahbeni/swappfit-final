@@ -162,7 +162,7 @@ export function HomeFeed({ initialItems, followingIds = [], currentUserProfile }
               onClick={() => handleGenderChange(g.value)}
               className={`flex items-center gap-1.5 rounded-full px-5 py-2 text-sm font-semibold transition-transform active:scale-95 ${
                 gender === g.value
-                  ? "bg-primary text-white shadow-[0_4px_12px_rgba(192,57,91,0.25)]"
+                  ? "bg-brand-gradient text-primary-foreground shadow-[0_8px_18px_rgba(192,57,91,0.22)]"
                   : "bg-muted text-muted-foreground"
               }`}
             >
