@@ -25,6 +25,7 @@ export function SupportForm({ userEmail, userName }: { userEmail: string; userNa
     e.preventDefault()
     
     if (message.length < 20) {
+      setStatus('error')
       setErrorMsg(t('messageTooShort'))
       return
     }
