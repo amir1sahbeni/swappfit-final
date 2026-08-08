@@ -16,7 +16,7 @@ export async function sendSupportEmail(data: {
 
     const { data: resendData, error } = await resend.emails.send({
       from: 'SwappFit Support <support@swappfit.me>',
-      to: ['kakashi1god@gmail.com'],
+      to: ['swappfit.support@gmail.com'],
       replyTo: data.userEmail,
       subject: `[SwappFit Support] ${data.subject}`,
       html: `
