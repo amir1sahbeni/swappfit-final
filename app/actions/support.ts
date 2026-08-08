@@ -2,32 +2,39 @@
 
 import { Resend } from 'resend'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
-
 export async function sendSupportEmail(data: {
   subject: string
   message: string
   userEmail: string
   userName: string
 }) {
-  const { subject, message, userEmail, userName } = data
+  console.log('sendSupportEmail called', data)
+  console.log('API KEY EXISTS:', !!process.env.RESEND_API_KEY)
 
-  const { error } = await resend.emails.send({
-    from: 'support@swappfit.me',
-    to: 'swappfit.support@gmail.com',
-    subject: `[SwappFit Support] ${subject}`,
-    html: `
-      <h2>Support Request from ${userName}</h2>
-      <p><strong>Email:</strong> ${userEmail}</p>
-      <p><strong>Subject:</strong> ${subject}</p>
-      <p><strong>Message:</strong></p>
-      <p>${message.replace(/\n/g, '<br>')}</p>
-    `
-  })
+  try {
+    const resend = new Resend(process.env.RESEND_API_KEY)
 
-  if (error) {
-    throw new Error(error.message)
+    const { data: resendData, error } = await resend.emails.send({
+      from: 'Support <onboarding@resend.dev>',
+      to: process.env.SUPPORT_EMAIL || 'support@swappfit.com',
+      replyTo: data.userEmail,
+      subject: `Support: ${data.subject}`,
+      html: `
+        <p><strong>Name:</strong> ${data.userName}</p>
+        <p><strong>Email:</strong> ${data.userEmail}</p>
+        <p><strong>Subject:</strong> ${data.subject}</p>
+        <p><strong>Message:</strong><br/>${data.message}</p>
+      `
+    })
+
+    if (error) {
+      console.error('Resend error:', error)
+      return { error: error.message }
+    }
+
+    return { success: true }
+  } catch (err: any) {
+    console.error('sendSupportEmail catch error:', err)
+    return { error: err.message || 'Unknown error occurred' }
   }
-
-  return { success: true }
 }

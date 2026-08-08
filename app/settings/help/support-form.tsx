@@ -33,18 +33,25 @@ export function SupportForm({ userEmail, userName }: { userEmail: string; userNa
     setErrorMsg('')
     
     try {
-      await sendSupportEmail({
+      const res = await sendSupportEmail({
         subject: subjects.find(s => s.value === subject)?.label || subject,
         message,
         userEmail,
         userName
       })
+
+      if (res?.error) {
+        setStatus('error')
+        setErrorMsg(res.error)
+        return
+      }
+
       setStatus('success')
       setSubject('')
       setMessage('')
     } catch (err: any) {
       setStatus('error')
-      setErrorMsg(t('errorMessage'))
+      setErrorMsg(err.message || t('errorMessage'))
     } finally {
       setIsSubmitting(false)
     }
