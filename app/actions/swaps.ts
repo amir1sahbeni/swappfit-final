@@ -129,3 +129,78 @@ export async function markSwapsAsViewed() {
     .update({ swaps_viewed_at: new Date().toISOString() })
     .eq('id', user.id)
 }
+
+export async function markSwapAsRead(id: string, type: 'swap' | 'purchase'): Promise<{ success: boolean; error?: string }> {
+  const supabase = await createServerClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect('/auth')
+
+  if (type === 'swap') {
+    const { data: swap } = await supabase
+      .from('swap_proposals')
+      .select('proposer_id, receiver_id')
+      .eq('id', id)
+      .maybeSingle()
+
+    if (!swap) return { success: false, error: 'Swap not found' }
+
+    if (swap.proposer_id === user.id) {
+      await supabase.from('swap_proposals').update({ proposer_read: true }).eq('id', id)
+    } else if (swap.receiver_id === user.id) {
+      await supabase.from('swap_proposals').update({ receiver_read: true }).eq('id', id)
+    }
+  } else {
+    const { data: purchase } = await supabase
+      .from('purchases')
+      .select('buyer_id, seller_id')
+      .eq('id', id)
+      .maybeSingle()
+
+    if (!purchase) return { success: false, error: 'Purchase not found' }
+
+    if (purchase.buyer_id === user.id) {
+      await supabase.from('purchases').update({ buyer_read: true }).eq('id', id)
+    } else if (purchase.seller_id === user.id) {
+      await supabase.from('purchases').update({ seller_read: true }).eq('id', id)
+    }
+  }
+
+  return { success: true }
+}
+
+export async function markAllSwapsAsRead(): Promise<{ success: boolean; error?: string }> {
+  const supabase = await createServerClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect('/auth')
+
+  // Update proposals where user is proposer
+  await supabase
+    .from('swap_proposals')
+    .update({ proposer_read: true })
+    .eq('proposer_id', user.id)
+    .eq('proposer_read', false)
+
+  // Update proposals where user is receiver
+  await supabase
+    .from('swap_proposals')
+    .update({ receiver_read: true })
+    .eq('receiver_id', user.id)
+    .eq('receiver_read', false)
+
+  // Update purchases where user is buyer
+  await supabase
+    .from('purchases')
+    .update({ buyer_read: true })
+    .eq('buyer_id', user.id)
+    .eq('buyer_read', false)
+
+  // Update purchases where user is seller
+  await supabase
+    .from('purchases')
+    .update({ seller_read: true })
+    .eq('seller_id', user.id)
+    .eq('seller_read', false)
+
+  revalidatePath('/swaps')
+  return { success: true }
+}

@@ -82,13 +82,19 @@ export function ChatsList({
   }
 
   useEffect(() => {
-    // Unique channel name prevents stale subscription errors on remount
     const channel = supabase
       .channel(`conversations_changes_${Date.now()}`)
       .on('postgres_changes', {
         event: '*',
         schema: 'public',
         table: 'conversations'
+      }, () => {
+        refreshConversations()
+      })
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'messages'
       }, () => {
         refreshConversations()
       })

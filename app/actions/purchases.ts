@@ -141,7 +141,7 @@ export async function acceptPurchase(purchaseId: string): Promise<{ success: boo
   // 1. Accept this purchase
   const { error: updateErr } = await supabase
     .from('purchases')
-    .update({ status: 'accepted', updated_at: new Date().toISOString() })
+    .update({ status: 'accepted', updated_at: new Date().toISOString(), buyer_read: false })
     .eq('id', purchaseId)
 
   if (updateErr) return { success: false, error: 'FAILED_TO_ACCEPT' }
@@ -257,7 +257,7 @@ export async function rejectPurchase(purchaseId: string): Promise<{ success: boo
 
   const { error } = await supabase
     .from('purchases')
-    .update({ status: 'cancelled', updated_at: new Date().toISOString() })
+    .update({ status: 'cancelled', updated_at: new Date().toISOString(), buyer_read: false })
     .eq('id', purchaseId)
 
   if (error) return { success: false, error: 'FAILED_TO_DECLINE' }
@@ -312,7 +312,7 @@ export async function cancelPurchase(purchaseId: string): Promise<{ success: boo
 
   const { error } = await supabase
     .from('purchases')
-    .update({ status: 'cancelled', updated_at: new Date().toISOString() })
+    .update({ status: 'cancelled', updated_at: new Date().toISOString(), seller_read: false })
     .eq('id', purchaseId)
 
   if (error) return { success: false, error: 'FAILED_TO_CANCEL' }
@@ -377,7 +377,8 @@ export async function completePurchase(purchaseId: string): Promise<{ success: b
       buyer_confirmed: true,
       seller_confirmed: true,
       completed_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
+      updated_at: new Date().toISOString(),
+      seller_read: false
     })
     .eq('id', purchaseId)
 

@@ -400,7 +400,10 @@
     "removeHistoryConfirm": "Retirer ceci de votre historique ?",
     "failedToDelete": "Échec de la suppression : ",
     "statusSold": "Vendu",
-    "statusPendingApproval": "En attente d'approbation"
+    "statusPendingApproval": "En attente d'approbation",
+    "clearHistory": "Effacer l'historique",
+    "markAllRead": "Tout marquer comme lu",
+    "failedToMarkRead": "Échec du marquage comme lu"
   },
   "NotificationsPage": {
     "title": "Notifications",

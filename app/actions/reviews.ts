@@ -62,5 +62,4 @@ export async function submitReview(data: {
 
   revalidatePath(`/user/${data.revieweeId}`)
   revalidatePath('/profile')
-  redirect('/profile', RedirectType.replace)
 }

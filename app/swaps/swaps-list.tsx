@@ -4,9 +4,9 @@ import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import { removeSwapProposal, removePurchaseFromHistory, hideAllSwapsFromHistory } from '@/app/actions/swaps'
+import { removeSwapProposal, removePurchaseFromHistory, hideAllSwapsFromHistory, markSwapAsRead, markAllSwapsAsRead } from '@/app/actions/swaps'
 import { useTranslations } from 'next-intl'
-import { Trash2, Trash } from 'lucide-react'
+import { Trash2, Trash, CheckCheck } from 'lucide-react'
 
 export function SwapsList({ history, userId }: { history: any[], userId: string }) {
   const t = useTranslations('Swaps')
@@ -62,6 +62,55 @@ export function SwapsList({ history, userId }: { history: any[], userId: string 
     }
   }
 
+  const handleMarkRead = async (id: string, type: 'swap' | 'purchase') => {
+    // Optimistic update
+    setLocalHistory(prev => prev.map(item => {
+      if (item.id === id) {
+        if (item.type === 'swap') {
+          return {
+            ...item,
+            ...(item.proposer_id === userId ? { proposer_read: true } : { receiver_read: true })
+          }
+        } else {
+          return {
+            ...item,
+            ...(item.buyer_id === userId ? { buyer_read: true } : { seller_read: true })
+          }
+        }
+      }
+      return item
+    }))
+    
+    try {
+      await markSwapAsRead(id, type)
+      router.refresh()
+    } catch (e) {
+      console.error(e)
+    }
+  }
+
+  const handleMarkAllRead = async () => {
+    setLocalHistory(prev => prev.map(item => {
+      if (item.type === 'swap') {
+        return {
+          ...item,
+          ...(item.proposer_id === userId ? { proposer_read: true } : { receiver_read: true })
+        }
+      } else {
+        return {
+          ...item,
+          ...(item.buyer_id === userId ? { buyer_read: true } : { seller_read: true })
+        }
+      }
+    }))
+    try {
+      await markAllSwapsAsRead()
+      router.refresh()
+    } catch (error: any) {
+      alert(t('failedToMarkRead', { fallback: 'Failed to mark as read' }) + error.message)
+    }
+  }
+
   if (localHistory.length === 0) {
     return <p className="mt-8 text-center text-sm text-muted-foreground">{t('noSwaps')}</p>
   }
@@ -72,18 +121,37 @@ export function SwapsList({ history, userId }: { history: any[], userId: string 
       : !['pending_seller_approval', 'accepted'].includes(item.status)
   })
 
+  const hasUnreadSwaps = localHistory.some(item => {
+    if (item.type === 'swap') {
+      return item.proposer_id === userId ? !item.proposer_read : !item.receiver_read
+    } else {
+      return item.buyer_id === userId ? !item.buyer_read : !item.seller_read
+    }
+  })
+
   return (
     <div className="mt-4 flex flex-col gap-3">
-      {hasHideableHistory && (
-        <div className="flex justify-end mb-2">
-          <button
-            onClick={handleClearHistory}
-            disabled={isClearing}
-            className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors active:scale-95"
-          >
-            <Trash className="h-3.5 w-3.5" />
-            {t('clearHistory', { fallback: 'Clear History' })}
-          </button>
+      {(hasHideableHistory || hasUnreadSwaps) && (
+        <div className="flex justify-between mb-2">
+          {hasUnreadSwaps ? (
+            <button
+              onClick={handleMarkAllRead}
+              className="flex items-center gap-1.5 text-xs font-semibold text-brand hover:text-brand-dark transition-colors active:scale-95"
+            >
+              <CheckCheck className="h-4 w-4" />
+              {t('markAllRead', { fallback: 'Mark all as read' })}
+            </button>
+          ) : <div />}
+          {hasHideableHistory && (
+            <button
+              onClick={handleClearHistory}
+              disabled={isClearing}
+              className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors active:scale-95"
+            >
+              <Trash className="h-3.5 w-3.5" />
+              {t('clearHistory', { fallback: 'Clear History' })}
+            </button>
+          )}
         </div>
       )}
       {localHistory.map((item) => {
@@ -98,12 +166,24 @@ export function SwapsList({ history, userId }: { history: any[], userId: string 
           if (proposal.status === 'declined' || proposal.status === 'cancelled') statusColor = "bg-destructive/10 text-destructive"
           if (proposal.status === 'completed') statusColor = "bg-brand-gradient text-primary-foreground shadow-[0_4px_10px_rgba(192,57,91,0.2)]"
 
+          const isUnread = proposal.proposer_id === userId ? !proposal.proposer_read : !proposal.receiver_read
+
           return (
             <div key={proposal.id} className="flex items-center gap-2">
               <Link
                 href={`/exchange/${proposal.id}`}
-                className="flex-1 flex items-center gap-4 rounded-3xl bg-card p-4 shadow-[0_2px_10px_rgba(0,0,0,0.03)] transition-transform active:scale-[0.98] border border-border"
+                onClick={(e) => {
+                  if (isUnread) handleMarkRead(proposal.id, 'swap')
+                }}
+                className={`relative flex-1 flex items-center gap-4 rounded-3xl p-4 transition-transform active:scale-[0.98] border ${
+                  isUnread
+                    ? "bg-brand-gradient/10 border-brand/30 shadow-[0_4px_15px_rgba(192,57,91,0.15)]"
+                    : "bg-card border-border shadow-[0_2px_10px_rgba(0,0,0,0.03)]"
+                }`}
               >
+                {isUnread && (
+                  <div className="absolute top-0 right-0 -mt-1 -mr-1 h-3.5 w-3.5 rounded-full bg-brand border-2 border-background z-10 animate-in zoom-in" />
+                )}
                 <Image
                   src={partner?.avatar_url || '/placeholder.svg'}
                   alt={partner?.name || t('user')}
@@ -145,12 +225,24 @@ export function SwapsList({ history, userId }: { history: any[], userId: string 
             ? t('statusAccepted') 
             : purchase.status
 
+          const isUnread = purchase.buyer_id === userId ? !purchase.buyer_read : !purchase.seller_read
+
           return (
             <div key={purchase.id} className="flex items-center gap-2">
               <Link
                 href={`/purchase/${purchase.id}`}
-                className="flex-1 flex items-center gap-4 rounded-3xl bg-card p-4 shadow-[0_2px_10px_rgba(0,0,0,0.03)] transition-transform active:scale-[0.98] border border-border"
+                onClick={(e) => {
+                  if (isUnread) handleMarkRead(purchase.id, 'purchase')
+                }}
+                className={`relative flex-1 flex items-center gap-4 rounded-3xl p-4 transition-transform active:scale-[0.98] border ${
+                  isUnread
+                    ? "bg-brand-gradient/10 border-brand/30 shadow-[0_4px_15px_rgba(192,57,91,0.15)]"
+                    : "bg-card border-border shadow-[0_2px_10px_rgba(0,0,0,0.03)]"
+                }`}
               >
+                {isUnread && (
+                  <div className="absolute top-0 right-0 -mt-1 -mr-1 h-3.5 w-3.5 rounded-full bg-brand border-2 border-background z-10 animate-in zoom-in" />
+                )}
                 <Image
                   src={partner?.avatar_url || '/placeholder.svg'}
                   alt={partner?.name || t('user')}

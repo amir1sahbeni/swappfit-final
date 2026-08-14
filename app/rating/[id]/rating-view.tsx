@@ -7,7 +7,7 @@ import type { Profile } from "@/lib/types"
 import { submitReview } from "@/app/actions/reviews"
 import { useTranslations } from 'next-intl'
 
-export function RatingView({ proposalId, partner }: { proposalId: string, partner: Profile }) {
+export function RatingView({ proposalId, partner }: { proposalId: string | null, partner: Profile }) {
   const t = useTranslations('Rating')
   const TAGS = [t('friendly'), t('fastReplier'), t('itemAsDescribed'), t('onTime'), t('greatCondition')]
   const router = useRouter()
@@ -36,7 +36,8 @@ export function RatingView({ proposalId, partner }: { proposalId: string, partne
         tags: selectedTags,
         body: review.trim(),
       })
-      // The action will redirect to /profile
+      router.refresh()
+      router.push('/')
     } catch (err) {
       console.error(err)
       setIsSubmitting(false)

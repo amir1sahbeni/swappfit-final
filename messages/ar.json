@@ -400,7 +400,10 @@
     "removeHistoryConfirm": "إزالة هذا من السجل الخاص بك؟",
     "failedToDelete": "فشل في الحذف: ",
     "statusSold": "مباع",
-    "statusPendingApproval": "في انتظار الموافقة"
+    "statusPendingApproval": "في انتظار الموافقة",
+    "clearHistory": "مسح السجل",
+    "markAllRead": "تحديد الكل كمقروء",
+    "failedToMarkRead": "فشل في التحديد كمقروء"
   },
   "NotificationsPage": {
     "title": "الإشعارات",

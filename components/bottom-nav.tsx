@@ -101,22 +101,42 @@ export function BottomNav() {
         })
         .subscribe()
 
-      // Track unseen swap activity (proposals updated after swaps_viewed_at)
-      const { data: profileData } = await supabase
-        .from('profiles')
-        .select('swaps_viewed_at')
-        .eq('id', user.id)
-        .single()
+      // Track unseen swap activity (using read status)
+      const fetchUnreadSwaps = async () => {
+        let count = 0;
+        
+        const { count: countPropProposer } = await supabase
+          .from('swap_proposals')
+          .select('*', { count: 'exact', head: true })
+          .eq('proposer_id', user.id)
+          .eq('proposer_read', false)
+        if (countPropProposer) count += countPropProposer
 
-      const seenAt = profileData?.swaps_viewed_at
+        const { count: countPropReceiver } = await supabase
+          .from('swap_proposals')
+          .select('*', { count: 'exact', head: true })
+          .eq('receiver_id', user.id)
+          .eq('receiver_read', false)
+        if (countPropReceiver) count += countPropReceiver
 
-      const { count: swapCount } = await supabase
-        .from('swap_proposals')
-        .select('*', { count: 'exact', head: true })
-        .or(`proposer_id.eq.${user.id},receiver_id.eq.${user.id}`)
-        .gt('updated_at', seenAt || '1970-01-01T00:00:00Z')
+        const { count: countPurchBuyer } = await supabase
+          .from('purchases')
+          .select('*', { count: 'exact', head: true })
+          .eq('buyer_id', user.id)
+          .eq('buyer_read', false)
+        if (countPurchBuyer) count += countPurchBuyer
 
-      if (swapCount !== null && swapCount > 0) setUnreadSwapCount(swapCount)
+        const { count: countPurchSeller } = await supabase
+          .from('purchases')
+          .select('*', { count: 'exact', head: true })
+          .eq('seller_id', user.id)
+          .eq('seller_read', false)
+        if (countPurchSeller) count += countPurchSeller
+
+        setUnreadSwapCount(count)
+      }
+
+      await fetchUnreadSwaps()
 
       swapChannel = supabase
         .channel(`nav_swaps_${user.id}_${Date.now()}`)
@@ -124,21 +144,12 @@ export function BottomNav() {
           event: "*",
           schema: "public",
           table: "swap_proposals"
-        }, async () => {
-          const { data: pd } = await supabase
-            .from('profiles')
-            .select('swaps_viewed_at')
-            .eq('id', user.id)
-            .single()
-
-          const { count: sc } = await supabase
-            .from('swap_proposals')
-            .select('*', { count: 'exact', head: true })
-            .or(`proposer_id.eq.${user.id},receiver_id.eq.${user.id}`)
-            .gt('updated_at', pd?.swaps_viewed_at || '1970-01-01T00:00:00Z')
-
-          setUnreadSwapCount(sc || 0)
-        })
+        }, fetchUnreadSwaps)
+        .on("postgres_changes", {
+          event: "*",
+          schema: "public",
+          table: "purchases"
+        }, fetchUnreadSwaps)
         .subscribe()
     }
 

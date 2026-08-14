@@ -288,7 +288,6 @@ export default function SearchPage() {
                   : "bg-muted text-muted-foreground"
               }`}
             >
-              <span>{g.emoji}</span>
               <span>{tGender(g.value as any)}</span>
             </button>
           ))}
@@ -536,7 +535,6 @@ export default function SearchPage() {
                       activeCategory === cat.value ? 'bg-primary/10 text-primary font-bold' : 'hover:bg-muted text-foreground'
                     }`}
                   >
-                    <span className="text-lg">{cat.emoji}</span>
                     <span className="flex-1">{tCat(cat.value as any) || cat.label}</span>
                   </button>
                 ))}

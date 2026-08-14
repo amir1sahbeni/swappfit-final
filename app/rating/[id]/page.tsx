@@ -22,7 +22,7 @@ export default async function RatingPage({ params, searchParams }: { params: Pro
     if (purchase.status !== 'completed') redirect(`/purchase/${id}`)
     
     const partner = purchase.buyer_id === user.id ? purchase.seller : purchase.buyer
-    return <RatingView proposalId={purchase.id} partner={partner!} />
+    return <RatingView proposalId={null} partner={partner!} />
   }
 
   const proposal = await getProposalById(id)

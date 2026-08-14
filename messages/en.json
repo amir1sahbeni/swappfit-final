@@ -400,7 +400,10 @@
     "removeHistoryConfirm": "Remove this from your history?",
     "failedToDelete": "Failed to delete: ",
     "statusSold": "Sold",
-    "statusPendingApproval": "Pending Approval"
+    "statusPendingApproval": "Pending Approval",
+    "clearHistory": "Clear History",
+    "markAllRead": "Mark all as read",
+    "failedToMarkRead": "Failed to mark as read"
   },
   "NotificationsPage": {
     "title": "Notifications",

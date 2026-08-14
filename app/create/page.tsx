@@ -315,7 +315,7 @@ export default function CreateListingPage() {
               <option value="" disabled>Select Category</option>
               {CATEGORIES.map((cat) => (
                 <option key={cat.value} value={cat.value}>
-                  {cat.emoji} {cat.label}
+                  {cat.label}
                 </option>
               ))}
             </select>
@@ -338,7 +338,6 @@ export default function CreateListingPage() {
                     : "bg-muted text-muted-foreground border-transparent"
                 }`}
               >
-                <span>{g.emoji}</span>
                 <span>{tGender(g.value as any)}</span>
               </button>
             ))}

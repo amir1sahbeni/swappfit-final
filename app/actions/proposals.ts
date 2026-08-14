@@ -188,7 +188,9 @@ export async function updateProposalStatus(
     .select('listing_id')
     .eq('proposal_id', proposalId)
 
-  const allItemIds = proposalItems && proposalItems.length > 0 ? proposalItems.map((i: any) => i.listing_id) : [proposal.offered_item_id, proposal.wanted_item_id].filter(Boolean)
+  const allItemIds = proposalItems?.map((i: any) => i.listing_id) || []
+  if (proposal.offered_item_id) allItemIds.push(proposal.offered_item_id)
+  if (proposal.wanted_item_id) allItemIds.push(proposal.wanted_item_id)
 
   // Fetch listing names for notifications
   const listingIds = [...new Set(allItemIds)]
@@ -207,7 +209,7 @@ export async function updateProposalStatus(
     // Update proposal
     const { error } = await supabase
       .from('swap_proposals')
-      .update({ status, updated_at: new Date().toISOString() })
+      .update({ status, updated_at: new Date().toISOString(), proposer_read: false })
       .eq('id', proposalId)
 
     if (error) throw new Error('FAILED_TO_ACCEPT')
@@ -315,7 +317,7 @@ export async function updateProposalStatus(
   } else if (status === 'declined') {
     const { error } = await supabase
       .from('swap_proposals')
-      .update({ status, updated_at: new Date().toISOString() })
+      .update({ status, updated_at: new Date().toISOString(), proposer_read: false })
       .eq('id', proposalId)
 
     if (error) throw new Error('FAILED_TO_DECLINE')
@@ -346,8 +348,10 @@ export async function updateProposalStatus(
 
     if (isProposer) {
       updateData.proposer_confirmed = true
+      updateData.receiver_read = false
     } else {
       updateData.receiver_confirmed = true
+      updateData.proposer_read = false
     }
 
     const newProposerConfirmed = isProposer ? true : proposal.proposer_confirmed
@@ -465,6 +469,7 @@ export async function cancelProposal(
       status: 'cancelled',
       cancelled_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
+      receiver_read: false,
     })
     .eq('id', proposalId)
 
