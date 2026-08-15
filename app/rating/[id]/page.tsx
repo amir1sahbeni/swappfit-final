@@ -11,6 +11,18 @@ export default async function RatingPage({ params, searchParams }: { params: Pro
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect("/auth")
 
+  // Check if already rated
+  const { data: existingReview } = await supabase
+    .from('reviews')
+    .select('id')
+    .eq('proposal_id', id)
+    .eq('reviewer_id', user.id)
+    .maybeSingle()
+    
+  if (existingReview) {
+    redirect(type === 'purchase' ? `/purchase/${id}` : `/exchange/${id}`)
+  }
+
   if (type === 'purchase') {
     const { data: purchase } = await supabase
       .from('purchases')

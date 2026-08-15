@@ -16,6 +16,17 @@ export async function submitReview(data: {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/auth')
 
+  // Check if already rated
+  if (data.proposalId) {
+    const { data: existing } = await supabase
+      .from('reviews')
+      .select('id')
+      .eq('proposal_id', data.proposalId)
+      .eq('reviewer_id', user.id)
+      .maybeSingle()
+    if (existing) throw new Error('ALREADY_RATED')
+  }
+
   // Insert review
   const { error: revErr } = await supabase.from('reviews').insert({
     reviewer_id: user.id,

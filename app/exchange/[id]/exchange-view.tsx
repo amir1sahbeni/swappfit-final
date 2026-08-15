@@ -11,6 +11,7 @@ import { useTranslations } from 'next-intl'
 import { ItemDetailModal } from "@/components/item-detail-modal"
 import { ItemListModal } from "@/components/item-list-modal"
 import { TopProgressBar } from "@/components/top-progress-bar"
+import { UserAvatar } from "@/components/user-avatar"
 
 export function ExchangeView({
   proposal: initialProposal,
@@ -253,7 +254,7 @@ export function ExchangeView({
       <div className="mt-10 rounded-2xl bg-muted p-5">
         <p className="text-xs font-semibold text-muted-foreground">{tv('swapPartner')}</p>
         <div className="mt-3 flex items-center gap-3">
-          <img src={partner.avatar_url || "/placeholder.svg"} alt={partner.name} className="h-10 w-10 rounded-full object-cover no-rtl-flip" />
+          <UserAvatar id={partner.id} name={partner.name} avatarUrl={partner.avatar_url} className="h-10 w-10" />
           <div>
             <p className="text-sm font-bold text-foreground">{partner.name}</p>
             <p className="flex items-center gap-1 text-xs text-muted-foreground">

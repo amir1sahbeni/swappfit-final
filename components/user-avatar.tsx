@@ -41,6 +41,8 @@ export function UserAvatar({ id, name, avatarUrl, hasNewListing, className = "h-
   return (
     <div
       onClick={handleClick}
+      onPointerDown={(e) => e.stopPropagation()}
+      onPointerUp={(e) => e.stopPropagation()}
       className={`shrink-0 block rounded-full cursor-pointer ${className} ${showRing ? "bg-brand-gradient p-[2px]" : ""}`}
     >
       <Image

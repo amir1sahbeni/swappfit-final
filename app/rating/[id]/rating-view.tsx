@@ -6,6 +6,7 @@ import { ChevronLeft, Star, Loader2 } from "lucide-react"
 import type { Profile } from "@/lib/types"
 import { submitReview } from "@/app/actions/reviews"
 import { useTranslations } from 'next-intl'
+import { UserAvatar } from "@/components/user-avatar"
 
 export function RatingView({ proposalId, partner }: { proposalId: string | null, partner: Profile }) {
   const t = useTranslations('Rating')
@@ -58,7 +59,7 @@ export function RatingView({ proposalId, partner }: { proposalId: string | null,
       </header>
 
       <div className="mt-8 flex flex-col items-center text-center">
-        <img src={partner.avatar_url || "/placeholder.svg"} alt={partner.name} className="h-20 w-20 rounded-full object-cover shadow-sm" />
+        <UserAvatar id={partner.id} name={partner.name} avatarUrl={partner.avatar_url} className="h-20 w-20" />
         <h2 className="mt-4 text-xl font-bold text-foreground">{t('howWasSwapping')} {partner.name}?</h2>
         <p className="mt-2 text-sm text-muted-foreground">{t('feedbackHelps')}</p>
       </div>

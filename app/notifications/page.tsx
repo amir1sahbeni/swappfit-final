@@ -190,7 +190,10 @@ export default function NotificationsPage() {
                   : "bg-primary/5 shadow-sm border border-primary/10"
               }`}
             >
-              <div className="relative shrink-0 mt-0.5">
+              <div 
+                className="relative shrink-0 mt-0.5"
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (notif.actor?.id) router.push(`/user/${notif.actor.id}`) }}
+              >
                 <Image
                   src={notif.actor?.avatar_url || "/placeholder.svg"}
                   alt={notif.actor?.name || 'User'}

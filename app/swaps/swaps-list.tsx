@@ -277,13 +277,18 @@ export function SwapsList({ userId }: { userId: string }) {
                 {isUnread && (
                   <div className="absolute top-0 right-0 -mt-1 -mr-1 h-3.5 w-3.5 rounded-full bg-brand border-2 border-background z-10 animate-in zoom-in" />
                 )}
-                <Image
-                  src={partner?.avatar_url || '/placeholder.svg'}
-                  alt={partner?.name || t('user')}
-                  width={48}
-                  height={48}
-                  className="rounded-full object-cover border border-border"
-                />
+                <div 
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (partner?.id) router.push(`/user/${partner.id}`) }}
+                  className="shrink-0"
+                >
+                  <Image
+                    src={partner?.avatar_url || '/placeholder.svg'}
+                    alt={partner?.name || t('user')}
+                    width={48}
+                    height={48}
+                    className="rounded-full object-cover border border-border"
+                  />
+                </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-bold text-foreground truncate">{partner?.name}</p>
                   <p className="text-xs text-muted-foreground truncate">{itemData?.name}</p>
@@ -334,13 +339,18 @@ export function SwapsList({ userId }: { userId: string }) {
                 {isUnread && (
                   <div className="absolute top-0 right-0 -mt-1 -mr-1 h-3.5 w-3.5 rounded-full bg-brand border-2 border-background z-10 animate-in zoom-in" />
                 )}
-                <Image
-                  src={partner?.avatar_url || '/placeholder.svg'}
-                  alt={partner?.name || t('user')}
-                  width={48}
-                  height={48}
-                  className="rounded-full object-cover border border-border"
-                />
+                <div 
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (partner?.id) router.push(`/user/${partner.id}`) }}
+                  className="shrink-0"
+                >
+                  <Image
+                    src={partner?.avatar_url || '/placeholder.svg'}
+                    alt={partner?.name || t('user')}
+                    width={48}
+                    height={48}
+                    className="rounded-full object-cover border border-border"
+                  />
+                </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-bold text-foreground truncate">{partner?.name}</p>
                   <p className="text-xs text-muted-foreground truncate">{itemData?.name} • {t('statusSold')}</p>
