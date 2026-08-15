@@ -165,6 +165,7 @@ export async function markSwapAsRead(id: string, type: 'swap' | 'purchase'): Pro
     }
   }
 
+  revalidatePath('/swaps')
   return { success: true }
 }
 

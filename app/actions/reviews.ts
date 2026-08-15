@@ -36,13 +36,11 @@ export async function submitReview(data: {
 
   if (allReviews && allReviews.length > 0) {
     const avg = allReviews.reduce((sum, r) => sum + r.rating, 0) / allReviews.length
-    await supabase
-      .from('profiles')
-      .update({
-        rating: Math.round(avg * 10) / 10,
-        review_count: allReviews.length
-      })
-      .eq('id', data.revieweeId)
+    await supabase.rpc('update_profile_rating', {
+      p_user_id: data.revieweeId,
+      p_rating: Math.round(avg * 10) / 10,
+      p_review_count: allReviews.length
+    })
   }
 
   // Notification
