@@ -26,22 +26,30 @@ export default async function ProfilePage() {
   if (!profile) redirect('/')
 
   // Run all independent queries in parallel instead of sequentially
-  const [dbListings, followStats, profileData] = await Promise.all([
+  const [dbListings, followStats] = await Promise.all([
     getOwnerListings(profile.id),
     getFollowStats(profile.id),
-    supabase.from('profiles').select('swaps_viewed_at').eq('id', user.id).single(),
   ])
 
   const items = dbListings.map(listing => listingToItem(listing, profile))
-  const seenAt = profileData.data?.swaps_viewed_at || '1970-01-01T00:00:00Z'
+  
+  // Track unseen swap activity — only recent (last 30 days), not hidden
+  const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
+  
+  const [
+    { count: countPropProposer },
+    { count: countPropReceiver },
+    { count: countPurchBuyer },
+    { count: countPurchSeller }
+  ] = await Promise.all([
+    supabase.from('swap_proposals').select('*', { count: 'exact', head: true }).eq('proposer_id', user.id).eq('proposer_read', false).not('hidden_for', 'cs', `{${user.id}}`).gte('updated_at', since),
+    supabase.from('swap_proposals').select('*', { count: 'exact', head: true }).eq('receiver_id', user.id).eq('receiver_read', false).not('hidden_for', 'cs', `{${user.id}}`).gte('updated_at', since),
+    supabase.from('purchases').select('*', { count: 'exact', head: true }).eq('buyer_id', user.id).eq('buyer_read', false).not('hidden_for', 'cs', `{${user.id}}`).gte('updated_at', since),
+    supabase.from('purchases').select('*', { count: 'exact', head: true }).eq('seller_id', user.id).eq('seller_read', false).not('hidden_for', 'cs', `{${user.id}}`).gte('updated_at', since)
+  ])
 
-  const { count: unseenSwapCount } = await supabase
-    .from('swap_proposals')
-    .select('*', { count: 'exact', head: true })
-    .or(`proposer_id.eq.${user.id},receiver_id.eq.${user.id}`)
-    .gt('updated_at', seenAt)
-
-  const hasUnseenSwaps = (unseenSwapCount || 0) > 0
+  const unseenSwapCount = (countPropProposer || 0) + (countPropReceiver || 0) + (countPurchBuyer || 0) + (countPurchSeller || 0)
+  const hasUnseenSwaps = unseenSwapCount > 0
 
   return (
     <main className="mx-auto w-full max-w-[390px] min-h-dvh pb-28 bg-background">
