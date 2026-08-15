@@ -70,7 +70,7 @@ export async function getUserPurchases(userId: string): Promise<Purchase[]> {
   // Fetch purchases alone
   const { data: purchases, error } = await supabase
     .from('purchases')
-    .select('id, buyer_id, seller_id, status, total_price, created_at, updated_at')
+    .select('id, buyer_id, seller_id, status, total_price, created_at, updated_at, buyer_read, seller_read')
     .or(`buyer_id.eq.${userId},seller_id.eq.${userId}`)
     .not('hidden_for', 'cs', `{${userId}}`)
     .order('created_at', { ascending: false })
