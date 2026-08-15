@@ -101,15 +101,18 @@ export function BottomNav() {
         })
         .subscribe()
 
-      // Track unseen swap activity (using read status)
+      // Track unseen swap activity — only recent (last 30 days), not hidden
+      const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
       const fetchUnreadSwaps = async () => {
-        let count = 0;
-        
+        let count = 0
+
         const { count: countPropProposer } = await supabase
           .from('swap_proposals')
           .select('*', { count: 'exact', head: true })
           .eq('proposer_id', user.id)
           .eq('proposer_read', false)
+          .not('hidden_for', 'cs', `{${user.id}}`)
+          .gte('updated_at', since)
         if (countPropProposer) count += countPropProposer
 
         const { count: countPropReceiver } = await supabase
@@ -117,6 +120,8 @@ export function BottomNav() {
           .select('*', { count: 'exact', head: true })
           .eq('receiver_id', user.id)
           .eq('receiver_read', false)
+          .not('hidden_for', 'cs', `{${user.id}}`)
+          .gte('updated_at', since)
         if (countPropReceiver) count += countPropReceiver
 
         const { count: countPurchBuyer } = await supabase
@@ -124,6 +129,8 @@ export function BottomNav() {
           .select('*', { count: 'exact', head: true })
           .eq('buyer_id', user.id)
           .eq('buyer_read', false)
+          .not('hidden_for', 'cs', `{${user.id}}`)
+          .gte('updated_at', since)
         if (countPurchBuyer) count += countPurchBuyer
 
         const { count: countPurchSeller } = await supabase
@@ -131,6 +138,8 @@ export function BottomNav() {
           .select('*', { count: 'exact', head: true })
           .eq('seller_id', user.id)
           .eq('seller_read', false)
+          .not('hidden_for', 'cs', `{${user.id}}`)
+          .gte('updated_at', since)
         if (countPurchSeller) count += countPurchSeller
 
         setUnreadSwapCount(count)
