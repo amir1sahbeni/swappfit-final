@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import { removeSwapProposal, removePurchaseFromHistory, hideAllSwapsFromHistory, markSwapAsRead, markAllSwapsAsRead } from '@/app/actions/swaps'
+import { removeSwapProposal, removePurchaseFromHistory, hideAllSwapsFromHistory } from '@/app/actions/swaps'
 import { useTranslations } from 'next-intl'
 import { Trash2, Trash, CheckCheck, Loader2 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
@@ -162,7 +162,7 @@ export function SwapsList({ userId }: { userId: string }) {
   }
 
   const handleMarkRead = async (id: string, type: 'swap' | 'purchase') => {
-    // Immediately update local state — no refresh needed
+    // Update local state immediately
     setHistory(prev => prev.map(item => {
       if (item.id !== id) return item
       if (item.type === 'swap') {
@@ -171,8 +171,16 @@ export function SwapsList({ userId }: { userId: string }) {
         return { ...item, ...(item.buyer_id === userId ? { buyer_read: true } : { seller_read: true }) }
       }
     }))
-    // Persist to DB (fire and forget — state is already correct locally)
-    markSwapAsRead(id, type).catch(console.error)
+    // Write directly to DB via browser client (same path bottom-nav reads from)
+    if (type === 'swap') {
+      const item = history.find(i => i.id === id)
+      const field = item?.proposer_id === userId ? 'proposer_read' : 'receiver_read'
+      await supabase.from('swap_proposals').update({ [field]: true }).eq('id', id)
+    } else {
+      const item = history.find(i => i.id === id)
+      const field = item?.buyer_id === userId ? 'buyer_read' : 'seller_read'
+      await supabase.from('purchases').update({ [field]: true }).eq('id', id)
+    }
   }
 
   const handleMarkAllRead = async () => {
@@ -183,9 +191,11 @@ export function SwapsList({ userId }: { userId: string }) {
         return { ...item, ...(item.buyer_id === userId ? { buyer_read: true } : { seller_read: true }) }
       }
     }))
-    markAllSwapsAsRead().catch((error: any) => {
-      alert(t('failedToMarkRead', { fallback: 'Failed to mark as read' }) + error.message)
-    })
+    // Write directly to DB via browser client
+    await supabase.from('swap_proposals').update({ proposer_read: true }).eq('proposer_id', userId).eq('proposer_read', false)
+    await supabase.from('swap_proposals').update({ receiver_read: true }).eq('receiver_id', userId).eq('receiver_read', false)
+    await supabase.from('purchases').update({ buyer_read: true }).eq('buyer_id', userId).eq('buyer_read', false)
+    await supabase.from('purchases').update({ seller_read: true }).eq('seller_id', userId).eq('seller_read', false)
   }
 
   if (loading) {
