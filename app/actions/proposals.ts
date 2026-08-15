@@ -20,10 +20,10 @@ export async function sendProposal(data: {
   if (!user) redirect('/auth')
 
   if (!data.offeredItemIds.length || !data.wantedItemIds.length) {
-    return { success: false, error: 'Select at least one item on each side.' }
+    return { success: false, error: 'SELECT_AT_LEAST_ONE_ITEM' }
   }
   if (data.offeredItemIds.length > 5 || data.wantedItemIds.length > 5) {
-    return { success: false, error: 'Maximum 5 items allowed per side.' }
+    return { success: false, error: 'MAX_FIVE_ITEMS_PER_SIDE' }
   }
 
   // ── Guard 1: same proposer already has this exact combo active? Not needed.
@@ -435,7 +435,7 @@ export async function cancelProposal(
     .single()
 
   if (fetchErr || !proposal) return { success: false, error: 'PROPOSAL_NOT_FOUND' }
-  if (proposal.proposer_id !== user.id) return { success: false, error: 'UNAUTHORIZED_PROPOSER_ONLY' }
+  if (proposal.proposer_id !== user.id && proposal.receiver_id !== user.id) return { success: false, error: 'UNAUTHORIZED' }
   if (proposal.status === 'completed') return { success: false, error: 'CANNOT_CANCEL_COMPLETED' }
   if (proposal.status === 'cancelled' || proposal.status === 'declined') {
     return { success: false, error: 'ALREADY_CLOSED' }

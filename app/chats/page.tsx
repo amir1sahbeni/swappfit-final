@@ -26,7 +26,7 @@ export default async function ChatsPage() {
         </div>
       </header>
 
-      <ChatsList initialConversations={conversations} recentSellers={recentSellers} />
+      <ChatsList initialConversations={conversations} recentSellers={recentSellers} userId={user.id} />
 
       <BottomNav />
     </main>

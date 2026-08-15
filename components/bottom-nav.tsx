@@ -58,47 +58,34 @@ export function BottomNav() {
         .subscribe()
 
       // Track unread messages
-      const { data: conversations } = await supabase
-        .from('conversations')
-        .select(`
-          id,
-          messages!inner(id, sender_id, read_at)
-        `)
-        .or(`participant_a.eq.${user.id},participant_b.eq.${user.id}`)
+      const fetchUnreadMessages = async () => {
+        const { data: conversations } = await supabase
+          .from('conversations')
+          .select(`
+            id,
+            messages!inner(id, sender_id, read_at)
+          `)
+          .or(`participant_a.eq.${user.id},participant_b.eq.${user.id}`)
 
-      const totalUnread = (conversations || []).reduce((acc: number, conv: any) => {
-        const unreadInConv = (conv.messages || []).filter(
-          (m: any) => m.sender_id !== user.id && !m.read_at
-        ).length
-        return acc + unreadInConv
-      }, 0)
+        const totalUnread = (conversations || []).reduce((acc: number, conv: any) => {
+          const unreadInConv = (conv.messages || []).filter(
+            (m: any) => m.sender_id !== user.id && !m.read_at
+          ).length
+          return acc + unreadInConv
+        }, 0)
 
-      setUnreadMessageCount(totalUnread)
+        setUnreadMessageCount(totalUnread)
+      }
+
+      await fetchUnreadMessages()
 
       messageChannel = supabase
         .channel(`nav_messages_${user.id}_${Date.now()}`)
         .on("postgres_changes", {
-          event: "INSERT",
+          event: "*",
           schema: "public",
           table: "messages"
-        }, async (payload: any) => {
-          const newMessage = payload.new
-          const isRecipient = newMessage.sender_id !== user.id
-
-          if (isRecipient) {
-            setUnreadMessageCount(prev => prev + 1)
-          }
-        })
-        .on("postgres_changes", {
-          event: "UPDATE",
-          schema: "public",
-          table: "messages"
-        }, async (payload: any) => {
-          const updatedMessage = payload.new
-          if (updatedMessage.read_at && !payload.old.read_at) {
-            setUnreadMessageCount(prev => Math.max(0, prev - 1))
-          }
-        })
+        }, fetchUnreadMessages)
         .subscribe()
 
       // Track unseen swap activity — only recent (last 30 days), not hidden

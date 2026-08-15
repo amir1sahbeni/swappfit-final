@@ -241,7 +241,7 @@ export function ChatView({
           .insert({
             participant_a: currentUserId,
             participant_b: partner.id,
-            last_message: "Sent an image",
+            last_message: t('sentAnImage'),
             last_message_at: new Date().toISOString()
           })
           .select('id')
@@ -253,7 +253,7 @@ export function ChatView({
       } else {
         await supabase
           .from('conversations')
-          .update({ last_message: "Sent an image", last_message_at: new Date().toISOString() })
+          .update({ last_message: t('sentAnImage'), last_message_at: new Date().toISOString() })
           .eq('id', activeConvId)
       }
 

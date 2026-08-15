@@ -442,7 +442,9 @@
     "sent": "Envoyé",
     "replyingTo": "En réponse à :",
     "anImage": "une image",
-    "failedToUploadImage": "Échec du téléchargement de l'image"
+    "failedToUploadImage": "Échec du téléchargement de l'image",
+    "sentAnImage": "A envoyé une image",
+    "buyPrefillText": "Bonjour ! Je viens d'acheter cet article et j'aimerais organiser le paiement et la livraison."
   },
   "Errors": {
     "ITEM_UNAVAILABLE": "Cet article n'est plus disponible.",
@@ -466,7 +468,9 @@
     "FAILED_TO_CREATE_PROPOSAL": "Échec de la création de la proposition.",
     "PROPOSAL_NOT_FOUND": "Proposition introuvable.",
     "UNAUTHORIZED_PROPOSER_ONLY": "Seul l'auteur de la proposition peut annuler.",
-    "ALREADY_CLOSED": "Cette proposition est déjà clôturée."
+    "ALREADY_CLOSED": "Cette proposition est déjà clôturée.",
+    "SELECT_AT_LEAST_ONE_ITEM": "Sélectionnez au moins un article de chaque côté.",
+    "MAX_FIVE_ITEMS_PER_SIDE": "Maximum 5 articles autorisés par côté."
   },
   "PurchaseView": {
     "title": "Achat",

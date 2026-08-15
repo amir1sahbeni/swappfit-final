@@ -21,8 +21,8 @@ export async function removeSwapProposal(id: string): Promise<{ success: boolean
 
   if (!proposal) return { success: true } // Already gone
 
-  // If active and this user is the proposer, cancel properly first
-  if (['pending', 'accepted'].includes(proposal.status) && proposal.proposer_id === user.id) {
+  // If active, cancel properly first
+  if (['pending', 'accepted'].includes(proposal.status)) {
     await cancelProposal(id)
     return { success: true }
   }

@@ -11,10 +11,12 @@ import { Trash2, X } from "lucide-react"
 
 export function ChatsList({ 
   initialConversations, 
-  recentSellers 
+  recentSellers,
+  userId
 }: { 
   initialConversations: Conversation[]
   recentSellers: string[]
+  userId: string
 }) {
   const router = useRouter()
   const [conversations, setConversations] = useState(initialConversations)
@@ -83,7 +85,7 @@ export function ChatsList({
 
   useEffect(() => {
     const channel = supabase
-      .channel(`conversations_changes_${Date.now()}`)
+      .channel(`conversations_changes_${userId}`)
       .on('postgres_changes', {
         event: '*',
         schema: 'public',

@@ -442,7 +442,9 @@
     "sent": "Sent",
     "replyingTo": "Replying to:",
     "anImage": "an image",
-    "failedToUploadImage": "Failed to upload image"
+    "failedToUploadImage": "Failed to upload image",
+    "sentAnImage": "Sent an image",
+    "buyPrefillText": "Hi! I just purchased this item and would like to arrange payment and delivery."
   },
   "Errors": {
     "ITEM_UNAVAILABLE": "This item is no longer available.",
@@ -466,7 +468,9 @@
     "FAILED_TO_CREATE_PROPOSAL": "Failed to create proposal.",
     "PROPOSAL_NOT_FOUND": "Proposal not found.",
     "UNAUTHORIZED_PROPOSER_ONLY": "Only the proposer can cancel.",
-    "ALREADY_CLOSED": "This proposal is already closed."
+    "ALREADY_CLOSED": "This proposal is already closed.",
+    "SELECT_AT_LEAST_ONE_ITEM": "Select at least one item on each side.",
+    "MAX_FIVE_ITEMS_PER_SIDE": "Maximum 5 items allowed per side."
   },
   "PurchaseView": {
     "title": "Purchase",

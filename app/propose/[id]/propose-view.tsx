@@ -24,6 +24,7 @@ export function ProposeView({
   hasPurchaseConflict?: boolean
 }) {
   const t = useTranslations('Propose')
+  const tError = useTranslations('Errors')
   const router = useRouter()
   const [selectedWantedIds, setSelectedWantedIds] = useState<string[]>([wantedItem.id])
   const [selectedOfferedIds, setSelectedOfferedIds] = useState<string[]>([])
@@ -71,7 +72,7 @@ export function ProposeView({
           router.replace(`/exchange/${result.proposalId}`)
         }, 1400)
       } else {
-        setError(result.error || 'Failed to send proposal.')
+        setError(result.error ? tError(result.error) : 'Failed to send proposal.')
         setIsSubmitting(false)
       }
     } catch (err: any) {

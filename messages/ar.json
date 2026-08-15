@@ -442,7 +442,9 @@
     "sent": "أُرسلت",
     "replyingTo": "ردًا على:",
     "anImage": "صورة",
-    "failedToUploadImage": "فشل تحميل الصورة"
+    "failedToUploadImage": "فشل تحميل الصورة",
+    "sentAnImage": "أرسل صورة",
+    "buyPrefillText": "مرحباً! لقد اشتريت هذا العنصر وأود ترتيب الدفع والتسليم."
   },
   "Errors": {
     "ITEM_UNAVAILABLE": "هذا العنصر لم يعد متاحًا.",
@@ -466,7 +468,9 @@
     "FAILED_TO_CREATE_PROPOSAL": "فشل إنشاء الاقتراح.",
     "PROPOSAL_NOT_FOUND": "لم يتم العثور على الاقتراح.",
     "UNAUTHORIZED_PROPOSER_ONLY": "يمكن لمقدم الاقتراح فقط الإلغاء.",
-    "ALREADY_CLOSED": "هذا الاقتراح مغلق بالفعل."
+    "ALREADY_CLOSED": "هذا الاقتراح مغلق بالفعل.",
+    "SELECT_AT_LEAST_ONE_ITEM": "حدد عنصراً واحداً على الأقل من كل جانب.",
+    "MAX_FIVE_ITEMS_PER_SIDE": "الحد الأقصى خمسة عناصر مسموح بها لكل جانب."
   },
   "PurchaseView": {
     "title": "شراء",

@@ -4,6 +4,7 @@ import { getConversationWithUser, getConversationMessages } from "@/lib/queries/
 import { getFollowedUsersWithRecentListings } from "@/lib/queries/follows"
 import { createServerClient } from "@/lib/supabase/server"
 import { ChatView } from "./chat-view"
+import { getTranslations } from "next-intl/server"
 
 export default async function ChatDetailPage({ 
   params,
@@ -15,9 +16,10 @@ export default async function ChatDetailPage({
   const { sellerId } = await params
   const { message, prefill } = await searchParams
   
+  const t = await getTranslations('ChatView')
   let initialText = message || ""
   if (prefill === "buy") {
-    initialText = "Hi! I just purchased this item and would like to arrange payment and delivery."
+    initialText = t('buyPrefillText')
   }
   
   const supabase = await createServerClient()

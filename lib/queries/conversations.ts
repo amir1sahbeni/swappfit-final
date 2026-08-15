@@ -1,9 +1,11 @@
 import { createServerClient } from '@/lib/supabase/server'
 import type { Conversation, Message } from '@/lib/types'
 import { getBlockedUsers } from './blocks'
+import { getTranslations } from 'next-intl/server'
 
 export async function getUserConversations(): Promise<Conversation[]> {
   const supabase = await createServerClient()
+  const t = await getTranslations('Chats')
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return []
 
@@ -74,7 +76,7 @@ export async function getUserConversations(): Promise<Conversation[]> {
     return {
       ...conv,
       partner,
-      last_message: lastVisibleMsg ? (lastVisibleMsg.message_type === 'image' ? 'Sent an image' : lastVisibleMsg.text) : conv.last_message,
+      last_message: lastVisibleMsg ? (lastVisibleMsg.message_type === 'image' ? t('sentAnImage') : lastVisibleMsg.text) : conv.last_message,
       last_message_at: lastVisibleMsg ? lastVisibleMsg.created_at : conv.last_message_at,
       unread_count: unreadCount,
       messages: undefined // Don't include messages in the returned conversation

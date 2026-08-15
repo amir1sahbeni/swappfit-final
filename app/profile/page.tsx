@@ -11,6 +11,7 @@ import { getUnreadNotificationCount } from '@/lib/queries/notifications'
 import { listingToItem } from '@/lib/utils'
 import { redirect } from 'next/navigation'
 import { getTranslations } from 'next-intl/server'
+import { LiveSwapBadge } from './live-swap-badge'
 
 export const dynamic = 'force-dynamic'
 
@@ -73,9 +74,7 @@ export default async function ProfilePage() {
             <div className="flex items-center gap-3">
               <div className="relative flex h-10 w-10 items-center justify-center rounded-full bg-muted">
                 <Repeat className="h-5 w-5 text-foreground" />
-                {hasUnseenSwaps && (
-                  <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-primary ring-2 ring-card" />
-                )}
+                <LiveSwapBadge initialHasUnseen={hasUnseenSwaps} userId={user.id} />
               </div>
               <div>
                 <p className="text-sm font-bold text-foreground">{t('mySwaps')}</p>
