@@ -1,18 +1,123 @@
 "use client"
 
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { removeSwapProposal, removePurchaseFromHistory, hideAllSwapsFromHistory, markSwapAsRead, markAllSwapsAsRead } from '@/app/actions/swaps'
 import { useTranslations } from 'next-intl'
-import { Trash2, Trash, CheckCheck } from 'lucide-react'
+import { Trash2, Trash, CheckCheck, Loader2 } from 'lucide-react'
+import { createClient } from '@/lib/supabase/client'
 
-export function SwapsList({ history, userId }: { history: any[], userId: string }) {
+export function SwapsList({ userId }: { userId: string }) {
   const t = useTranslations('Swaps')
   const router = useRouter()
-  const [localHistory, setLocalHistory] = useState(history)
+  const supabase = createClient()
+  const [history, setHistory] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
   const [isClearing, setIsClearing] = useState(false)
+
+  const loadHistory = useCallback(async () => {
+    // Fetch proposals
+    const { data: proposals } = await supabase
+      .from('swap_proposals')
+      .select('id, proposer_id, receiver_id, offered_item_id, wanted_item_id, status, note, completed_at, cancelled_at, created_at, updated_at, proposer_confirmed, receiver_confirmed, proposer_read, receiver_read')
+      .or(`proposer_id.eq.${userId},receiver_id.eq.${userId}`)
+      .not('hidden_for', 'cs', `{${userId}}`)
+      .order('created_at', { ascending: false })
+      .limit(100)
+
+    // Fetch purchases
+    const { data: purchases } = await supabase
+      .from('purchases')
+      .select('id, buyer_id, seller_id, status, total_price, created_at, updated_at, buyer_read, seller_read')
+      .or(`buyer_id.eq.${userId},seller_id.eq.${userId}`)
+      .not('hidden_for', 'cs', `{${userId}}`)
+      .order('created_at', { ascending: false })
+
+    // Gather all user IDs for profiles
+    const userIds = new Set<string>()
+    ;(proposals || []).forEach(p => { userIds.add(p.proposer_id); userIds.add(p.receiver_id) })
+    ;(purchases || []).forEach(p => { userIds.add(p.buyer_id); userIds.add(p.seller_id) })
+
+    const { data: profiles } = await supabase
+      .from('profiles')
+      .select('id, name, handle, avatar_url')
+      .in('id', Array.from(userIds))
+    const profileMap = new Map((profiles || []).map(p => [p.id, p]))
+
+    // Gather listing IDs for proposals
+    const proposalIds = (proposals || []).map(p => p.id)
+    const { data: proposalItems } = proposalIds.length > 0
+      ? await supabase.from('swap_proposal_items').select('proposal_id, listing_id, side').in('proposal_id', proposalIds)
+      : { data: [] }
+
+    const listingIds = new Set<string>()
+    ;(proposals || []).forEach(p => {
+      if (p.offered_item_id) listingIds.add(p.offered_item_id)
+      if (p.wanted_item_id) listingIds.add(p.wanted_item_id)
+    })
+    ;(proposalItems || []).forEach((pi: any) => listingIds.add(pi.listing_id))
+
+    // Gather listing IDs for purchases
+    const purchaseIds = (purchases || []).map(p => p.id)
+    const { data: purchaseItems } = purchaseIds.length > 0
+      ? await supabase.from('purchase_items').select('purchase_id, item_id').in('purchase_id', purchaseIds)
+      : { data: [] }
+    ;(purchaseItems || []).forEach((pi: any) => listingIds.add(pi.item_id))
+
+    const { data: listings } = listingIds.size > 0
+      ? await supabase.from('listings').select('id, name, images').in('id', Array.from(listingIds))
+      : { data: [] }
+    const listingMap = new Map((listings || []).map(l => [l.id, l]))
+
+    // Assemble proposals
+    const assembledProposals = (proposals || []).map(p => {
+      const myItems = (proposalItems || []).filter((pi: any) => pi.proposal_id === p.id)
+      return {
+        ...p,
+        type: 'swap' as const,
+        proposer: profileMap.get(p.proposer_id) || null,
+        receiver: profileMap.get(p.receiver_id) || null,
+        offered_item: p.offered_item_id ? listingMap.get(p.offered_item_id) || null : null,
+        wanted_item: p.wanted_item_id ? listingMap.get(p.wanted_item_id) || null : null,
+        swap_proposal_items: myItems.map((pi: any) => ({ ...pi, listing: listingMap.get(pi.listing_id) }))
+      }
+    })
+
+    // Assemble purchases
+    const purchaseItemsByPurchase = new Map<string, any[]>()
+    ;(purchaseItems || []).forEach((pi: any) => {
+      if (!purchaseItemsByPurchase.has(pi.purchase_id)) purchaseItemsByPurchase.set(pi.purchase_id, [])
+      purchaseItemsByPurchase.get(pi.purchase_id)!.push({ ...pi, item: listingMap.get(pi.item_id) })
+    })
+    const assembledPurchases = (purchases || []).map(p => ({
+      ...p,
+      type: 'purchase' as const,
+      buyer: profileMap.get(p.buyer_id) || null,
+      seller: profileMap.get(p.seller_id) || null,
+      items: purchaseItemsByPurchase.get(p.id) || []
+    }))
+
+    const combined = [...assembledProposals, ...assembledPurchases]
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+
+    setHistory(combined)
+    setLoading(false)
+  }, [userId])
+
+  useEffect(() => {
+    loadHistory()
+
+    // Realtime subscription so status updates appear live
+    const channel = supabase
+      .channel(`swaps_list_${userId}_${Date.now()}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'swap_proposals' }, loadHistory)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'purchases' }, loadHistory)
+      .subscribe()
+
+    return () => { channel.unsubscribe() }
+  }, [loadHistory])
 
   const handleDeleteSwap = async (id: string, type: 'swap' | 'purchase', status: string) => {
     const isActive = type === 'swap'
@@ -31,9 +136,7 @@ export function SwapsList({ history, userId }: { history: any[], userId: string 
       } else {
         await removePurchaseFromHistory(id)
       }
-      // Remove from local state
-      setLocalHistory(localHistory.filter(item => item.id !== id))
-      router.refresh() // Force UI update
+      setHistory(prev => prev.filter(item => item.id !== id))
     } catch (error: any) {
       alert(t('failedToDelete') + error.message)
     }
@@ -44,17 +147,13 @@ export function SwapsList({ history, userId }: { history: any[], userId: string 
 
     try {
       setIsClearing(true)
-      
-      // Optimistic update: remove completed, cancelled, declined
-      setLocalHistory(localHistory.filter(item => {
+      setHistory(prev => prev.filter(item => {
         const isActive = item.type === 'swap'
           ? ['pending', 'accepted'].includes(item.status)
           : ['pending_seller_approval', 'accepted'].includes(item.status)
         return isActive
       }))
-      
       await hideAllSwapsFromHistory()
-      router.refresh()
     } catch (error: any) {
       alert(t('failedToClear') + error.message)
     } finally {
@@ -63,65 +162,51 @@ export function SwapsList({ history, userId }: { history: any[], userId: string 
   }
 
   const handleMarkRead = async (id: string, type: 'swap' | 'purchase') => {
-    // Optimistic update
-    setLocalHistory(prev => prev.map(item => {
-      if (item.id === id) {
-        if (item.type === 'swap') {
-          return {
-            ...item,
-            ...(item.proposer_id === userId ? { proposer_read: true } : { receiver_read: true })
-          }
-        } else {
-          return {
-            ...item,
-            ...(item.buyer_id === userId ? { buyer_read: true } : { seller_read: true })
-          }
-        }
+    // Immediately update local state — no refresh needed
+    setHistory(prev => prev.map(item => {
+      if (item.id !== id) return item
+      if (item.type === 'swap') {
+        return { ...item, ...(item.proposer_id === userId ? { proposer_read: true } : { receiver_read: true }) }
+      } else {
+        return { ...item, ...(item.buyer_id === userId ? { buyer_read: true } : { seller_read: true }) }
       }
-      return item
     }))
-    
-    try {
-      await markSwapAsRead(id, type)
-      router.refresh()
-    } catch (e) {
-      console.error(e)
-    }
+    // Persist to DB (fire and forget — state is already correct locally)
+    markSwapAsRead(id, type).catch(console.error)
   }
 
   const handleMarkAllRead = async () => {
-    setLocalHistory(prev => prev.map(item => {
+    setHistory(prev => prev.map(item => {
       if (item.type === 'swap') {
-        return {
-          ...item,
-          ...(item.proposer_id === userId ? { proposer_read: true } : { receiver_read: true })
-        }
+        return { ...item, ...(item.proposer_id === userId ? { proposer_read: true } : { receiver_read: true }) }
       } else {
-        return {
-          ...item,
-          ...(item.buyer_id === userId ? { buyer_read: true } : { seller_read: true })
-        }
+        return { ...item, ...(item.buyer_id === userId ? { buyer_read: true } : { seller_read: true }) }
       }
     }))
-    try {
-      await markAllSwapsAsRead()
-      router.refresh()
-    } catch (error: any) {
+    markAllSwapsAsRead().catch((error: any) => {
       alert(t('failedToMarkRead', { fallback: 'Failed to mark as read' }) + error.message)
-    }
+    })
   }
 
-  if (localHistory.length === 0) {
+  if (loading) {
+    return (
+      <div className="mt-16 flex justify-center">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    )
+  }
+
+  if (history.length === 0) {
     return <p className="mt-8 text-center text-sm text-muted-foreground">{t('noSwaps')}</p>
   }
 
-  const hasHideableHistory = localHistory.some(item => {
-    return item.type === 'swap' 
+  const hasHideableHistory = history.some(item => {
+    return item.type === 'swap'
       ? !['pending', 'accepted'].includes(item.status)
       : !['pending_seller_approval', 'accepted'].includes(item.status)
   })
 
-  const hasUnreadSwaps = localHistory.some(item => {
+  const hasUnreadSwaps = history.some(item => {
     if (item.type === 'swap') {
       return item.proposer_id === userId ? !item.proposer_read : !item.receiver_read
     } else {
@@ -154,7 +239,7 @@ export function SwapsList({ history, userId }: { history: any[], userId: string 
           )}
         </div>
       )}
-      {localHistory.map((item) => {
+      {history.map((item) => {
         if (item.type === 'swap') {
           const proposal = item
           const isReceiver = proposal.receiver_id === userId
@@ -172,9 +257,7 @@ export function SwapsList({ history, userId }: { history: any[], userId: string 
             <div key={proposal.id} className="flex items-center gap-2">
               <Link
                 href={`/exchange/${proposal.id}`}
-                onClick={(e) => {
-                  if (isUnread) handleMarkRead(proposal.id, 'swap')
-                }}
+                onClick={() => { if (isUnread) handleMarkRead(proposal.id, 'swap') }}
                 className={`relative flex-1 flex items-center gap-4 rounded-3xl p-4 transition-transform active:scale-[0.98] border ${
                   isUnread
                     ? "bg-brand-gradient/10 border-brand/30 shadow-[0_4px_15px_rgba(192,57,91,0.15)]"
@@ -219,10 +302,10 @@ export function SwapsList({ history, userId }: { history: any[], userId: string 
           if (purchase.status === 'completed') statusColor = "bg-brand-gradient text-primary-foreground shadow-[0_4px_10px_rgba(192,57,91,0.2)]"
           if (purchase.status === 'pending_seller_approval') statusColor = "bg-yellow-500/10 text-yellow-600"
 
-          const statusLabel = purchase.status === 'pending_seller_approval' 
-            ? t('statusPendingApproval') 
-            : purchase.status === 'accepted' 
-            ? t('statusAccepted') 
+          const statusLabel = purchase.status === 'pending_seller_approval'
+            ? t('statusPendingApproval')
+            : purchase.status === 'accepted'
+            ? t('statusAccepted')
             : purchase.status
 
           const isUnread = purchase.buyer_id === userId ? !purchase.buyer_read : !purchase.seller_read
@@ -231,9 +314,7 @@ export function SwapsList({ history, userId }: { history: any[], userId: string 
             <div key={purchase.id} className="flex items-center gap-2">
               <Link
                 href={`/purchase/${purchase.id}`}
-                onClick={(e) => {
-                  if (isUnread) handleMarkRead(purchase.id, 'purchase')
-                }}
+                onClick={() => { if (isUnread) handleMarkRead(purchase.id, 'purchase') }}
                 className={`relative flex-1 flex items-center gap-4 rounded-3xl p-4 transition-transform active:scale-[0.98] border ${
                   isUnread
                     ? "bg-brand-gradient/10 border-brand/30 shadow-[0_4px_15px_rgba(192,57,91,0.15)]"
