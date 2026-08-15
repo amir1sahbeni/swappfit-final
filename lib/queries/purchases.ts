@@ -67,15 +67,28 @@ export async function getPurchaseById(id: string): Promise<Purchase | null> {
 export async function getUserPurchases(userId: string): Promise<Purchase[]> {
   const supabase = await createServerClient()
 
-  // Fetch purchases alone
-  const { data: purchases, error } = await supabase
+  // Fetch purchases alone (with read status; falls back if columns don't exist yet)
+  let { data: purchases, error } = await supabase
     .from('purchases')
     .select('id, buyer_id, seller_id, status, total_price, created_at, updated_at, buyer_read, seller_read')
     .or(`buyer_id.eq.${userId},seller_id.eq.${userId}`)
     .not('hidden_for', 'cs', `{${userId}}`)
     .order('created_at', { ascending: false })
 
-  if (error || !purchases) return []
+  // If the read-status columns don't exist in the DB yet, fall back to a query without them
+  if (error) {
+    console.warn('getUserPurchases: falling back without read columns:', error.message)
+    const fallback = await supabase
+      .from('purchases')
+      .select('id, buyer_id, seller_id, status, total_price, created_at, updated_at')
+      .or(`buyer_id.eq.${userId},seller_id.eq.${userId}`)
+      .not('hidden_for', 'cs', `{${userId}}`)
+      .order('created_at', { ascending: false })
+    if (fallback.error || !fallback.data) return []
+    purchases = fallback.data
+  }
+
+  if (!purchases) return []
 
   // Fetch purchase_items for all purchases
   const purchaseIds = purchases.map(p => p.id)

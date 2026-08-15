@@ -89,8 +89,8 @@ export async function getProposalById(id: string) {
 export async function getUserProposals(userId: string): Promise<SwapProposal[]> {
   const supabase = await createServerClient()
 
-  // Step 1: Get the proposals
-  const { data: proposals, error } = await supabase
+  // Step 1: Get the proposals (with read status; falls back if columns don't exist yet)
+  let { data: proposals, error } = await supabase
     .from('swap_proposals')
     .select('id, proposer_id, receiver_id, offered_item_id, wanted_item_id, status, note, completed_at, cancelled_at, created_at, updated_at, proposer_confirmed, receiver_confirmed, proposer_read, receiver_read')
     .or(`proposer_id.eq.${userId},receiver_id.eq.${userId}`)
@@ -98,7 +98,21 @@ export async function getUserProposals(userId: string): Promise<SwapProposal[]> 
     .order('created_at', { ascending: false })
     .limit(100)
 
-  if (error || !proposals) return []
+  // If the read-status columns don't exist in the DB yet, fall back to a query without them
+  if (error) {
+    console.warn('getUserProposals: falling back without read columns:', error.message)
+    const fallback = await supabase
+      .from('swap_proposals')
+      .select('id, proposer_id, receiver_id, offered_item_id, wanted_item_id, status, note, completed_at, cancelled_at, created_at, updated_at, proposer_confirmed, receiver_confirmed')
+      .or(`proposer_id.eq.${userId},receiver_id.eq.${userId}`)
+      .not('hidden_for', 'cs', `{${userId}}`)
+      .order('created_at', { ascending: false })
+      .limit(100)
+    if (fallback.error || !fallback.data) return []
+    proposals = fallback.data
+  }
+
+  if (!proposals) return []
 
   // Step 2: Get all unique user IDs (proposers and receivers)
   const userIds = new Set<string>()
