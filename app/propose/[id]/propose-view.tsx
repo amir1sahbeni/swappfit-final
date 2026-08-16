@@ -32,7 +32,7 @@ export function ProposeView({
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
-  const [previewItem, setPreviewItem] = useState<Item | null>(null)
+  const [previewItems, setPreviewItems] = useState<Item[] | null>(null)
 
   const selectedWanted = sellerItems.filter(i => selectedWantedIds.includes(i.id))
   const selectedOffered = myItems.filter(i => selectedOfferedIds.includes(i.id))
@@ -100,8 +100,8 @@ export function ProposeView({
 
   return (
     <>
-      {previewItem && (
-        <ItemDetailModal items={[previewItem]} onClose={() => setPreviewItem(null)} />
+      {previewItems && (
+        <ItemDetailModal items={previewItems} onClose={() => setPreviewItems(null)} />
       )}
       <main className="mx-auto w-full max-w-[390px] min-h-dvh pb-[280px]">
         {/* Header */}
@@ -178,7 +178,7 @@ export function ProposeView({
                   <div className="flex flex-col p-2 pb-2 bg-card">
                     <p className="truncate text-[10px] font-semibold text-foreground">{item.name}</p>
                     <button 
-                      onClick={(e) => { e.stopPropagation(); setPreviewItem(item); }}
+                      onClick={(e) => { e.stopPropagation(); setPreviewItems([item]); }}
                       className="mt-1 flex items-center justify-center gap-1 rounded bg-muted py-1 text-[9px] font-bold text-muted-foreground transition-transform active:scale-95"
                     >
                       <Info className="h-3 w-3" /> Details
@@ -248,7 +248,7 @@ export function ProposeView({
                     <div className="flex flex-col p-2 pb-2 bg-card">
                       <p className="truncate text-[10px] font-semibold text-foreground">{item.name}</p>
                       <button 
-                        onClick={(e) => { e.stopPropagation(); setPreviewItem(item); }}
+                        onClick={(e) => { e.stopPropagation(); setPreviewItems([item]); }}
                         className="mt-1 flex items-center justify-center gap-1 rounded bg-muted py-1 text-[9px] font-bold text-muted-foreground transition-transform active:scale-95"
                       >
                         <Info className="h-3 w-3" /> Details
@@ -280,7 +280,7 @@ export function ProposeView({
             <div className="flex flex-col gap-1 w-24">
               <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{t('youWant')}</span>
               <button 
-                onClick={() => selectedWanted.length > 0 && setPreviewItem(selectedWanted[0])}
+                onClick={() => selectedWanted.length > 0 && setPreviewItems(selectedWanted)}
                 className="relative h-12 w-full text-left transition-transform active:scale-95"
               >
                 {selectedWanted.slice(0, 3).map((item, index) => (
@@ -305,7 +305,7 @@ export function ProposeView({
             <div className="flex flex-col gap-1 w-24 items-end text-right">
               <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{t('youOffer')}</span>
               <button 
-                onClick={() => selectedOffered.length > 0 && setPreviewItem(selectedOffered[0])}
+                onClick={() => selectedOffered.length > 0 && setPreviewItems(selectedOffered)}
                 className="relative h-12 w-full text-right transition-transform active:scale-95"
               >
                 {selectedOffered.slice(0, 3).map((item, index) => (

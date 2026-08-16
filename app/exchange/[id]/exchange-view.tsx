@@ -197,7 +197,13 @@ export function ExchangeView({
                 src={item.image || "/placeholder.svg"} 
                 alt="Item" 
                 className="absolute aspect-square w-full rounded-2xl object-cover shadow-sm no-rtl-flip border-2 border-background" 
-                style={{ top: index * 6, left: index * 6, zIndex: 10 - index }}
+                style={{ 
+                  top: index * 6, 
+                  left: index * 6, 
+                  zIndex: 10 - index,
+                  transform: index > 0 ? `rotate(${index * 4}deg)` : 'none',
+                  transformOrigin: 'bottom right'
+                }}
               />
             ))}
             {myItems.length > 1 && (
@@ -226,7 +232,13 @@ export function ExchangeView({
                 src={item.image || "/placeholder.svg"} 
                 alt="Item" 
                 className="absolute aspect-square w-full rounded-2xl object-cover shadow-sm no-rtl-flip border-2 border-background" 
-                style={{ top: index * 6, right: index * 6, zIndex: 10 - index }}
+                style={{ 
+                  top: index * 6, 
+                  right: index * 6, 
+                  zIndex: 10 - index,
+                  transform: index > 0 ? `rotate(-${index * 4}deg)` : 'none',
+                  transformOrigin: 'bottom left'
+                }}
               />
             ))}
             {theirItems.length > 1 && (
