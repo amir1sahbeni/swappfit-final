@@ -263,12 +263,22 @@ export function SwapsList({ userId }: { userId: string }) {
 
           const isUnread = proposal.proposer_id === userId ? !proposal.proposer_read : !proposal.receiver_read
 
+          // Build item images
+          const myItems = (proposal.swap_proposal_items || []).filter((pi: any) => pi.side === (isReceiver ? 'wanted' : 'offered'))
+          const theirItems = (proposal.swap_proposal_items || []).filter((pi: any) => pi.side === (isReceiver ? 'offered' : 'wanted'))
+          const myImages: string[] = myItems.length > 0
+            ? myItems.map((pi: any) => pi.listing?.images?.[0]).filter(Boolean)
+            : [itemData?.images?.[0]].filter(Boolean)
+          const theirFirstImage: string | undefined = theirItems.length > 0
+            ? theirItems[0]?.listing?.images?.[0]
+            : (isReceiver ? proposal.offered_item : proposal.wanted_item)?.images?.[0]
+
           return (
             <div key={proposal.id} className="flex items-center gap-2">
               <Link
                 href={`/exchange/${proposal.id}`}
                 onClick={() => { if (isUnread) handleMarkRead(proposal.id, 'swap') }}
-                className={`relative flex-1 flex items-center gap-4 rounded-3xl p-4 transition-transform active:scale-[0.98] border ${
+                className={`relative flex-1 flex items-center gap-3 rounded-3xl p-3 transition-transform active:scale-[0.98] border ${
                   isUnread
                     ? "bg-brand-gradient/10 border-brand/30 shadow-[0_4px_15px_rgba(192,57,91,0.15)]"
                     : "bg-card border-border shadow-[0_2px_10px_rgba(0,0,0,0.03)]"
@@ -277,6 +287,7 @@ export function SwapsList({ userId }: { userId: string }) {
                 {isUnread && (
                   <div className="absolute top-0 right-0 -mt-1 -mr-1 h-3.5 w-3.5 rounded-full bg-brand border-2 border-background z-10 animate-in zoom-in" />
                 )}
+                {/* Partner avatar */}
                 <div 
                   onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (partner?.id) router.push(`/user/${partner.id}`) }}
                   className="shrink-0"
@@ -284,16 +295,45 @@ export function SwapsList({ userId }: { userId: string }) {
                   <Image
                     src={partner?.avatar_url || '/placeholder.svg'}
                     alt={partner?.name || t('user')}
-                    width={48}
-                    height={48}
+                    width={40}
+                    height={40}
                     className="rounded-full object-cover border border-border"
                   />
                 </div>
+                {/* Info */}
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-bold text-foreground truncate">{partner?.name}</p>
-                  <p className="text-xs text-muted-foreground truncate">{itemData?.name}</p>
+                  <div className="mt-1.5 flex items-center gap-2">
+                    {/* My items stacked thumbnails */}
+                    <div className="relative flex items-center" style={{ height: 28, width: Math.min(myImages.length, 3) * 18 + 10 }}>
+                      {myImages.slice(0, 3).map((src: string, idx: number) => (
+                        <img
+                          key={idx}
+                          src={src || '/placeholder.svg'}
+                          alt=""
+                          className="absolute h-7 w-7 rounded-md object-cover border-2 border-background shadow-sm"
+                          style={{ left: idx * 16, zIndex: 10 - idx }}
+                        />
+                      ))}
+                    </div>
+                    {myImages.length > 0 && theirFirstImage && (
+                      <span className="text-[10px] text-muted-foreground shrink-0">⇄</span>
+                    )}
+                    {/* Their item thumbnail */}
+                    {theirFirstImage && (
+                      <img
+                        src={theirFirstImage}
+                        alt=""
+                        className="h-7 w-7 rounded-md object-cover border-2 border-background shadow-sm shrink-0"
+                      />
+                    )}
+                    {!myImages.length && !theirFirstImage && (
+                      <p className="text-xs text-muted-foreground truncate">{itemData?.name}</p>
+                    )}
+                  </div>
                 </div>
-                <div className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${statusColor}`}>
+                {/* Status badge */}
+                <div className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider shrink-0 ${statusColor}`}>
                   {proposal.status}
                 </div>
               </Link>

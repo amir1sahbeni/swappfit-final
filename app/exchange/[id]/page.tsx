@@ -25,14 +25,14 @@ export default async function ExchangePage({ params }: { params: Promise<{ id: s
   const partner = isReceiver ? proposal.proposer : proposal.receiver
 
   const wantedItems = (proposal.swap_proposal_items || [])
-    .filter(i => i.side === 'wanted')
+    .filter(i => i.side === 'wanted' && i.listing)
     .map(i => listingToItem(i.listing!))
 
   const offeredItems = (proposal.swap_proposal_items || [])
-    .filter(i => i.side === 'offered')
+    .filter(i => i.side === 'offered' && i.listing)
     .map(i => listingToItem(i.listing!))
 
-  // Legacy fallback for 1-to-1 swaps
+  // Legacy fallback for 1-to-1 swaps (when swap_proposal_items is empty)
   if (wantedItems.length === 0 && proposal.wanted_item) {
     wantedItems.push(listingToItem(proposal.wanted_item))
   }
