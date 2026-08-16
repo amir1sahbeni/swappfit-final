@@ -128,7 +128,14 @@ export async function sendProposal(data: {
     ...data.offeredItemIds.map(id => ({ proposal_id: proposal.id, listing_id: id, side: 'offered' })),
     ...data.wantedItemIds.map(id => ({ proposal_id: proposal.id, listing_id: id, side: 'wanted' }))
   ]
-  await supabase.from('swap_proposal_items').insert(proposalItems)
+  const { error: itemsError } = await supabase.from('swap_proposal_items').insert(proposalItems)
+  
+  if (itemsError) {
+    console.error("Failed to insert proposal items:", itemsError)
+    // We could delete the proposal here to clean up, but for now let's just return the error
+    await supabase.from('swap_proposals').delete().eq('id', proposal.id)
+    return { success: false, error: 'FAILED_TO_INSERT_ITEMS: ' + itemsError.message }
+  }
 
   // ── Notifications ──
   // Fetch proposer profile for push title

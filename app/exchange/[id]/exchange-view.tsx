@@ -198,11 +198,11 @@ export function ExchangeView({
                 alt="Item" 
                 className="absolute aspect-square w-full rounded-2xl object-cover shadow-sm no-rtl-flip border-2 border-background" 
                 style={{ 
-                  top: index * 6, 
-                  left: index * 6, 
+                  top: index * 10, 
+                  left: index * 10, 
                   zIndex: 10 - index,
-                  transform: index > 0 ? `rotate(${index * 4}deg)` : 'none',
-                  transformOrigin: 'bottom right'
+                  transform: index > 0 ? `rotate(${index * 8}deg)` : 'none',
+                  transformOrigin: 'center'
                 }}
               />
             ))}
@@ -233,11 +233,11 @@ export function ExchangeView({
                 alt="Item" 
                 className="absolute aspect-square w-full rounded-2xl object-cover shadow-sm no-rtl-flip border-2 border-background" 
                 style={{ 
-                  top: index * 6, 
-                  right: index * 6, 
+                  top: index * 10, 
+                  right: index * 10, 
                   zIndex: 10 - index,
-                  transform: index > 0 ? `rotate(-${index * 4}deg)` : 'none',
-                  transformOrigin: 'bottom left'
+                  transform: index > 0 ? `rotate(-${index * 8}deg)` : 'none',
+                  transformOrigin: 'center'
                 }}
               />
             ))}
@@ -407,7 +407,7 @@ export function ExchangeView({
                 onClick={() => setCancelConfirm(true)}
                 className="flex h-10 w-full items-center justify-center rounded-full bg-destructive/10 text-sm font-medium text-destructive transition-transform active:scale-95"
               >
-                Cancel Swap
+                {tv('cancelSwap')}
               </button>
             )}
           </div>
