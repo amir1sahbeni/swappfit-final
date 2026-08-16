@@ -482,8 +482,9 @@ export async function cancelProposal(
 
   if (error) return { success: false, error: 'FAILED_TO_CANCEL' }
 
-  // If swap was accepted, revert all listings to 'active'
-  if (wasAccepted) {
+  // Always revert all listings to 'active' when a swap is cancelled
+  // (items may have been marked 'swapped' on acceptance, or we just want to ensure they're unlocked)
+  if (allItemIds.length > 0) {
     await supabase
       .from('listings')
       .update({ status: 'active', updated_at: new Date().toISOString() })

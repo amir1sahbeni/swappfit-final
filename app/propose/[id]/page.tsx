@@ -31,14 +31,29 @@ export default async function ProposePage({ params }: { params: Promise<{ id: st
   // Fetch all of the seller's active listings
   const dbSellerItems = await getUserListings(wantedListing.seller_id)
 
-  // Fetch IDs of items already locked in pending/accepted proposals (as offeredItem)
+  // Fetch IDs of items already locked in pending/accepted proposals
+  // Check BOTH legacy column and swap_proposal_items
   const { data: lockedProposals } = await supabase
     .from('swap_proposals')
-    .select('offered_item_id')
+    .select('id, offered_item_id')
     .eq('proposer_id', user.id)
     .in('status', ['pending', 'accepted'])
 
-  const lockedItemIds = (lockedProposals ?? []).map((p: any) => p.offered_item_id as string)
+  const lockedProposalIds = (lockedProposals ?? []).map((p: any) => p.id)
+  const legacyLockedIds = (lockedProposals ?? []).map((p: any) => p.offered_item_id).filter(Boolean)
+
+  // Also get items locked via swap_proposal_items (multi-item proposals)
+  let newStyleLockedIds: string[] = []
+  if (lockedProposalIds.length > 0) {
+    const { data: lockedItems } = await supabase
+      .from('swap_proposal_items')
+      .select('listing_id')
+      .in('proposal_id', lockedProposalIds)
+      .eq('side', 'offered')
+    newStyleLockedIds = (lockedItems ?? []).map((i: any) => i.listing_id)
+  }
+
+  const lockedItemIds = [...new Set([...legacyLockedIds, ...newStyleLockedIds])]
 
   // Check cross-flow: already has pending purchase for this wanted item
   const { data: purchaseConflict } = await supabase
