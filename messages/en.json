@@ -234,7 +234,8 @@
     "statusPending": "Pending",
     "statusAccepted": "Accepted",
     "statusDeclined": "Declined",
-    "statusCancelled": "Cancelled"
+    "statusCancelled": "Cancelled",
+    "itemsCount": "{count} items"
   },
   "ItemDetail": {
     "locationHidden": "Location hidden",

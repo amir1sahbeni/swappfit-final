@@ -234,7 +234,8 @@
     "statusPending": "En attente",
     "statusAccepted": "Accepté",
     "statusDeclined": "Refusé",
-    "statusCancelled": "Annulé"
+    "statusCancelled": "Annulé",
+    "itemsCount": "{count} articles"
   },
   "ItemDetail": {
     "locationHidden": "Position masquée",

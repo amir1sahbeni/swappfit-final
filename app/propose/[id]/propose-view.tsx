@@ -101,7 +101,7 @@ export function ProposeView({
   return (
     <>
       {previewItem && (
-        <ItemDetailModal item={previewItem} onClose={() => setPreviewItem(null)} />
+        <ItemDetailModal items={[previewItem]} onClose={() => setPreviewItem(null)} />
       )}
       <main className="mx-auto w-full max-w-[390px] min-h-dvh pb-[280px]">
         {/* Header */}

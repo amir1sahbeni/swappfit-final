@@ -234,7 +234,8 @@
     "statusPending": "قيد الانتظار",
     "statusAccepted": "مقبول",
     "statusDeclined": "مرفوض",
-    "statusCancelled": "ملغى"
+    "statusCancelled": "ملغى",
+    "itemsCount": "{count} عناصر"
   },
   "ItemDetail": {
     "locationHidden": "الموقع مخفي",

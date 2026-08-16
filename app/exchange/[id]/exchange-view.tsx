@@ -9,7 +9,6 @@ import { updateProposalStatus, cancelProposal } from "@/app/actions/proposals"
 import { createClient } from "@/lib/supabase/client"
 import { useTranslations } from 'next-intl'
 import { ItemDetailModal } from "@/components/item-detail-modal"
-import { ItemListModal } from "@/components/item-list-modal"
 import { TopProgressBar } from "@/components/top-progress-bar"
 import { UserAvatar } from "@/components/user-avatar"
 
@@ -38,8 +37,7 @@ export function ExchangeView({
   const [proposal, setProposal] = useState<SwapProposal>(initialProposal)
   const [actionError, setActionError] = useState<string | null>(null)
   const [cancelConfirm, setCancelConfirm] = useState(false)
-  const [previewItem, setPreviewItem] = useState<Item | null>(null)
-  const [listModalItems, setListModalItems] = useState<{ items: Item[], title: string } | null>(null)
+  const [previewItems, setPreviewItems] = useState<Item[] | null>(null)
   const supabase = createClient()
 
   useEffect(() => {
@@ -169,16 +167,8 @@ export function ExchangeView({
   return (
     <>
       <TopProgressBar isUpdating={isUpdating || isCancelling} />
-      {previewItem && (
-        <ItemDetailModal item={previewItem} onClose={() => setPreviewItem(null)} />
-      )}
-      {listModalItems && (
-        <ItemListModal 
-          items={listModalItems.items} 
-          title={listModalItems.title} 
-          onClose={() => setListModalItems(null)} 
-          onSelect={(item) => setPreviewItem(item)} 
-        />
+      {previewItems && (
+        <ItemDetailModal items={previewItems} onClose={() => setPreviewItems(null)} />
       )}
       <main className="mx-auto w-full max-w-[390px] min-h-dvh px-5 pb-28 pt-2">
         <header className="flex items-center justify-between">
@@ -198,7 +188,7 @@ export function ExchangeView({
       <div className="mt-8 flex items-center justify-center gap-4">
         <div className="flex w-28 flex-col items-center">
           <button 
-            onClick={() => myItems.length > 1 ? setListModalItems({ items: myItems, title: isReceiver ? t('yourItem') : t('youOffered') }) : setPreviewItem(myItems[0])}
+            onClick={() => setPreviewItems(myItems)}
             className="relative h-28 w-28 transition-transform active:scale-95"
           >
             {myItems.slice(0, 3).map((item, index) => (
@@ -211,8 +201,8 @@ export function ExchangeView({
               />
             ))}
             {myItems.length > 1 && (
-              <div className="absolute -right-2 -top-2 z-20 flex h-6 w-6 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-white shadow-sm">
-                {myItems.length}
+              <div className="absolute -bottom-2 -right-2 z-20 flex items-center justify-center rounded-full bg-primary px-2.5 py-1 text-[10px] font-bold text-white shadow-sm">
+                {tv('itemsCount', { count: myItems.length })}
               </div>
             )}
           </button>
@@ -227,7 +217,7 @@ export function ExchangeView({
         
         <div className="flex w-28 flex-col items-center">
           <button 
-            onClick={() => theirItems.length > 1 ? setListModalItems({ items: theirItems, title: isReceiver ? t('theyOffer') : t('theyGive') }) : setPreviewItem(theirItems[0])}
+            onClick={() => setPreviewItems(theirItems)}
             className="relative h-28 w-28 transition-transform active:scale-95"
           >
             {theirItems.slice(0, 3).map((item, index) => (
@@ -240,8 +230,8 @@ export function ExchangeView({
               />
             ))}
             {theirItems.length > 1 && (
-              <div className="absolute -left-2 -top-2 z-20 flex h-6 w-6 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-white shadow-sm">
-                {theirItems.length}
+              <div className="absolute -bottom-2 -right-2 z-20 flex items-center justify-center rounded-full bg-primary px-2.5 py-1 text-[10px] font-bold text-white shadow-sm">
+                {tv('itemsCount', { count: theirItems.length })}
               </div>
             )}
           </button>
